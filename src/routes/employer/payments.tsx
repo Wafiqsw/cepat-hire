@@ -12,93 +12,90 @@ function EmployerPayments() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
-  // Sample payment data
+  // Sample payment data - job completion payments
   const payments = [
     {
       id: '1',
-      amount: 5000.00,
+      amount: 450.00,
       currency: 'RM',
       status: 'completed' as const,
       date: 'Dec 3, 2024',
-      description: 'Monthly salary payment for November 2024',
+      description: 'Part-Time Barista - 3 weeks completed',
+      jobTitle: 'Part-Time Barista',
       paymentMethod: 'Bank Transfer',
       transactionId: 'TXN-2024-001234',
-      recipient: 'Ahmad Ibrahim',
+      recipient: 'Ahmad Abdullah',
+      hoursWorked: 90,
+      ratePerHour: 'RM 10/hour',
     },
     {
       id: '2',
-      amount: 3500.00,
+      amount: 320.00,
       currency: 'RM',
       status: 'pending' as const,
       date: 'Dec 5, 2024',
-      description: 'Project milestone payment',
+      description: 'Retail Sales Assistant - 2 weeks completed',
+      jobTitle: 'Retail Sales Assistant',
       paymentMethod: 'Online Banking',
       transactionId: 'TXN-2024-001235',
       recipient: 'Siti Nurhaliza',
+      hoursWorked: 40,
+      ratePerHour: 'RM 8/hour',
     },
     {
       id: '3',
-      amount: 1200.50,
+      amount: 540.00,
       currency: 'RM',
-      status: 'ongoing' as const,
-      date: 'Dec 6, 2024',
-      description: 'Freelance work payment - Website design',
+      status: 'completed' as const,
+      date: 'Dec 2, 2024',
+      description: 'Food Delivery Rider - 1 week completed',
+      jobTitle: 'Food Delivery Rider',
       paymentMethod: 'E-Wallet',
+      transactionId: 'TXN-2024-001220',
       recipient: 'Lee Wei Ming',
+      hoursWorked: 36,
+      ratePerHour: 'RM 15/hour',
     },
     {
       id: '4',
-      amount: 2800.00,
+      amount: 800.00,
       currency: 'RM',
-      status: 'cancelled' as const,
+      status: 'completed' as const,
       date: 'Nov 28, 2024',
-      description: 'Payment cancelled due to contract termination',
+      description: 'Tutor - Mathematics - 20 hours completed',
+      jobTitle: 'Tutor - Mathematics',
       paymentMethod: 'Bank Transfer',
       transactionId: 'TXN-2024-001180',
-      recipient: 'John Doe',
+      recipient: 'Nurul Aisyah',
+      hoursWorked: 20,
+      ratePerHour: 'RM 40/hour',
     },
     {
       id: '5',
-      amount: 7500.00,
+      amount: 600.00,
       currency: 'RM',
-      status: 'completed' as const,
-      date: 'Dec 1, 2024',
-      description: 'Consultation fee for December',
-      paymentMethod: 'Credit Card',
-      transactionId: 'TXN-2024-001200',
-      recipient: 'Tech Solutions Ltd.',
+      status: 'pending' as const,
+      date: 'Dec 6, 2024',
+      description: 'Warehouse Packer - 2 weeks completed',
+      jobTitle: 'Warehouse Packer',
+      paymentMethod: 'Bank Transfer',
+      recipient: 'Muhammad Faris',
+      hoursWorked: 75,
+      ratePerHour: 'RM 8/hour',
     },
     {
       id: '6',
-      amount: 4200.00,
+      amount: 375.00,
       currency: 'RM',
       status: 'completed' as const,
       date: 'Nov 25, 2024',
-      description: 'Full-stack development project',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001150',
-      recipient: 'Maria Garcia',
-    },
-    {
-      id: '7',
-      amount: 1800.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: 'Dec 7, 2024',
-      description: 'UI/UX design consultation',
+      description: 'Restaurant Server - 1 week completed',
+      jobTitle: 'Restaurant Server',
       paymentMethod: 'E-Wallet',
-      recipient: 'David Chen',
-    },
-    {
-      id: '8',
-      amount: 6500.00,
-      currency: 'RM',
-      status: 'ongoing' as const,
-      date: 'Dec 4, 2024',
-      description: 'Mobile app development - Phase 2',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001220',
-      recipient: 'Sarah Johnson',
+      transactionId: 'TXN-2024-001150',
+      recipient: 'Amirah Sofea',
+      hoursWorked: 30,
+      ratePerHour: 'RM 12.50/hour',
     },
   ]
 
@@ -113,7 +110,7 @@ function EmployerPayments() {
     total: payments.reduce((sum, p) => sum + p.amount, 0),
     completed: payments.filter(p => p.status === 'completed').length,
     pending: payments.filter(p => p.status === 'pending').length,
-    ongoing: payments.filter(p => p.status === 'ongoing').length,
+    totalPayments: payments.length,
   }
 
   return (
@@ -157,10 +154,10 @@ function EmployerPayments() {
           </div>
           <div className="p-6 rounded-xl border-2" style={{ backgroundColor: '#f8eee7', borderColor: '#4ade80' }}>
             <p className="text-sm mb-2" style={{ color: '#16a34a', opacity: 0.9 }}>
-              Ongoing
+              Total Payments
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#16a34a' }}>
-              {stats.ongoing}
+              {stats.totalPayments}
             </h3>
           </div>
         </div>

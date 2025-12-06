@@ -14,6 +14,9 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
+import { Route as EmployerJoblistRouteImport } from './routes/employer/joblist'
+import { Route as EmployerDashboardRouteImport } from './routes/employer/dashboard'
+import { Route as EmployerApplicationsRouteImport } from './routes/employer/applications'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
@@ -45,6 +48,21 @@ const SeekerPaymentsRoute = SeekerPaymentsRouteImport.update({
 const EmployerPaymentsRoute = EmployerPaymentsRouteImport.update({
   id: '/employer/payments',
   path: '/employer/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerJoblistRoute = EmployerJoblistRouteImport.update({
+  id: '/employer/joblist',
+  path: '/employer/joblist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerDashboardRoute = EmployerDashboardRouteImport.update({
+  id: '/employer/dashboard',
+  path: '/employer/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerApplicationsRoute = EmployerApplicationsRouteImport.update({
+  id: '/employer/applications',
+  path: '/employer/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
@@ -87,6 +105,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -101,6 +122,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -116,6 +140,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -132,6 +159,9 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -146,6 +176,9 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -160,6 +193,9 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -175,6 +211,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRoute
   PlaygroundRoute: typeof PlaygroundRoute
+  EmployerApplicationsRoute: typeof EmployerApplicationsRoute
+  EmployerDashboardRoute: typeof EmployerDashboardRoute
+  EmployerJoblistRoute: typeof EmployerJoblistRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
   SeekerPaymentsRoute: typeof SeekerPaymentsRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
@@ -221,6 +260,27 @@ declare module '@tanstack/react-router' {
       path: '/employer/payments'
       fullPath: '/employer/payments'
       preLoaderRoute: typeof EmployerPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/joblist': {
+      id: '/employer/joblist'
+      path: '/employer/joblist'
+      fullPath: '/employer/joblist'
+      preLoaderRoute: typeof EmployerJoblistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/dashboard': {
+      id: '/employer/dashboard'
+      path: '/employer/dashboard'
+      fullPath: '/employer/dashboard'
+      preLoaderRoute: typeof EmployerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/applications': {
+      id: '/employer/applications'
+      path: '/employer/applications'
+      fullPath: '/employer/applications'
+      preLoaderRoute: typeof EmployerApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/start/server-funcs': {
@@ -279,6 +339,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRoute,
   PlaygroundRoute: PlaygroundRoute,
+  EmployerApplicationsRoute: EmployerApplicationsRoute,
+  EmployerDashboardRoute: EmployerDashboardRoute,
+  EmployerJoblistRoute: EmployerJoblistRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,
   SeekerPaymentsRoute: SeekerPaymentsRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
