@@ -13,8 +13,10 @@ import type * as applications from "../applications.js";
 import type * as auth from "../auth.js";
 import type * as candidates from "../candidates.js";
 import type * as conversations from "../conversations.js";
+import type * as employees from "../employees.js";
 import type * as jobs from "../jobs.js";
 import type * as payments from "../payments.js";
+import type * as searchEngine from "../searchEngine.js";
 import type * as seed from "../seed.js";
 import type * as seeker from "../seeker.js";
 
@@ -30,8 +32,10 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   candidates: typeof candidates;
   conversations: typeof conversations;
+  employees: typeof employees;
   jobs: typeof jobs;
   payments: typeof payments;
+  searchEngine: typeof searchEngine;
   seed: typeof seed;
   seeker: typeof seeker;
 }>;

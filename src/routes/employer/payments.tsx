@@ -1,4 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
 import { Modal, ModalActions, Button, Loading, Skeleton } from '../../components'
 import {
@@ -13,111 +15,13 @@ import {
   Calendar,
   ChevronRight,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/payments')({
   component: EmployerPayments,
 })
-
-// Mock data for applicants to pay
-const mockApplicantsToPay = [
-  {
-    id: '1',
-    candidateName: 'Ahmad Razak',
-    candidateImage: '',
-    jobTitle: 'Waiter',
-    jobLocation: 'Kuala Lumpur',
-    workPeriod: '15 Nov - 20 Nov 2024',
-    hoursWorked: 40,
-    hourlyRate: 15,
-    totalAmount: 600,
-    status: 'pending' as const,
-    applicationDate: '12 Nov 2024',
-    completionDate: '20 Nov 2024',
-    description: '5 days waiter service at Cafe Delight during peak hours',
-  },
-  {
-    id: '2',
-    candidateName: 'Siti Aminah',
-    candidateImage: '',
-    jobTitle: 'Graphic Designer',
-    jobLocation: 'Petaling Jaya',
-    workPeriod: '1 Nov - 15 Nov 2024',
-    hoursWorked: 80,
-    hourlyRate: 25,
-    totalAmount: 2000,
-    status: 'pending' as const,
-    applicationDate: '28 Oct 2024',
-    completionDate: '15 Nov 2024',
-    description: 'Logo redesign and brand identity package for startup company',
-  },
-  {
-    id: '3',
-    candidateName: 'Kumar Selvam',
-    candidateImage: '',
-    jobTitle: 'Delivery Rider',
-    jobLocation: 'Shah Alam',
-    workPeriod: '10 Nov - 17 Nov 2024',
-    hoursWorked: 56,
-    hourlyRate: 12,
-    totalAmount: 672,
-    status: 'pending' as const,
-    applicationDate: '5 Nov 2024',
-    completionDate: '17 Nov 2024',
-    description: '1 week food delivery service covering Shah Alam area',
-  },
-  {
-    id: '4',
-    candidateName: 'Lisa Tan',
-    candidateImage: '',
-    jobTitle: 'Content Writer',
-    jobLocation: 'Remote',
-    workPeriod: '1 Nov - 30 Nov 2024',
-    hoursWorked: 120,
-    hourlyRate: 30,
-    totalAmount: 3600,
-    status: 'paid' as const,
-    applicationDate: '25 Oct 2024',
-    completionDate: '30 Nov 2024',
-    paidDate: '1 Dec 2024',
-    transactionId: 'TXN-20241201-001',
-    description: 'Monthly content creation for blog and social media',
-  },
-  {
-    id: '5',
-    candidateName: 'Muhammad Ismail',
-    candidateImage: '',
-    jobTitle: 'Event Helper',
-    jobLocation: 'Kuala Lumpur',
-    workPeriod: '18 Nov 2024',
-    hoursWorked: 8,
-    hourlyRate: 18,
-    totalAmount: 144,
-    status: 'paid' as const,
-    applicationDate: '10 Nov 2024',
-    completionDate: '18 Nov 2024',
-    paidDate: '19 Nov 2024',
-    transactionId: 'TXN-20241119-002',
-    description: 'Setup and teardown assistance for corporate event',
-  },
-  {
-    id: '6',
-    candidateName: 'Priya Menon',
-    candidateImage: '',
-    jobTitle: 'Data Entry Clerk',
-    jobLocation: 'Cyberjaya',
-    workPeriod: '5 Nov - 12 Nov 2024',
-    hoursWorked: 48,
-    hourlyRate: 14,
-    totalAmount: 672,
-    status: 'paid' as const,
-    applicationDate: '1 Nov 2024',
-    completionDate: '12 Nov 2024',
-    paidDate: '13 Nov 2024',
-    transactionId: 'TXN-20241113-003',
-    description: 'Database entry and verification for inventory system',
-  },
-]
 
 // Payment methods
 const paymentMethods = [
@@ -127,39 +31,68 @@ const paymentMethods = [
 ]
 
 function EmployerPayments() {
-  const [isLoading, setIsLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [selectedApplicant, setSelectedApplicant] = useState<typeof mockApplicantsToPay[0] | null>(null)
+  const [selectedPayment, setSelectedPayment] = useState<any>(null)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [lastTransactionId, setLastTransactionId] = useState<string>('')
 
-  // Simulate API call
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1200)
-    return () => clearTimeout(timer)
-  }, [])
+  const { user } = useAuth()
 
-  const filteredApplicants = mockApplicantsToPay.filter(applicant => {
-    return statusFilter === 'all' || applicant.status === statusFilter
+  // Fetch real data from Convex
+  const paymentsData = useQuery(
+    api.payments.listByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
+  const paymentStats = useQuery(
+    api.payments.getStatsByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
+
+  // Payment mutations
+  const updatePaymentStatus = useMutation(api.payments.updateStatus)
+
+  // Transform payment data for display
+  const payments = paymentsData?.map((payment) => ({
+    id: payment._id,
+    candidateName: payment.candidate?.name || 'Unknown',
+    candidateImage: '',
+    jobTitle: payment.job?.title || 'Unknown Job',
+    jobLocation: payment.job?.location || 'N/A',
+    workPeriod: payment.dateRange,
+    totalAmount: payment.amount,
+    status: payment.status === 'completed' ? 'paid' : payment.status,
+    description: payment.description,
+    transactionId: payment.transactionId,
+    paidDate: payment.status === 'completed'
+      ? new Date(payment.createdAt).toLocaleDateString('en-GB')
+      : undefined,
+  })) || []
+
+  const filteredPayments = payments.filter(payment => {
+    if (statusFilter === 'all') return true
+    if (statusFilter === 'pending') return payment.status === 'pending' || payment.status === 'ongoing'
+    if (statusFilter === 'paid') return payment.status === 'paid'
+    return true
   })
 
-  // Calculate stats
+  // Calculate stats from real data
   const stats = {
-    totalPending: mockApplicantsToPay.filter(a => a.status === 'pending').length,
-    totalPaid: mockApplicantsToPay.filter(a => a.status === 'paid').length,
-    pendingAmount: mockApplicantsToPay
-      .filter(a => a.status === 'pending')
-      .reduce((sum, a) => sum + a.totalAmount, 0),
-    paidAmount: mockApplicantsToPay
-      .filter(a => a.status === 'paid')
-      .reduce((sum, a) => sum + a.totalAmount, 0),
+    totalPending: paymentStats?.pending || 0,
+    totalPaid: paymentStats?.completed || 0,
+    pendingAmount: payments
+      .filter(p => p.status === 'pending' || p.status === 'ongoing')
+      .reduce((sum, p) => sum + p.totalAmount, 0),
+    paidAmount: payments
+      .filter(p => p.status === 'paid')
+      .reduce((sum, p) => sum + p.totalAmount, 0),
   }
 
-  const handlePayClick = (applicant: typeof mockApplicantsToPay[0]) => {
-    setSelectedApplicant(applicant)
+  const handlePayClick = (payment: typeof payments[0]) => {
+    setSelectedPayment(payment)
     setShowPaymentModal(true)
   }
 
@@ -171,34 +104,37 @@ function EmployerPayments() {
   }
 
   const handleConfirmPayment = async () => {
+    if (!selectedPayment) return
+
     setIsProcessing(true)
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    // Update mock data (in real app, this would be API call)
-    if (selectedApplicant) {
-      const applicant = mockApplicantsToPay.find(a => a.id === selectedApplicant.id)
-      if (applicant) {
-        applicant.status = 'paid'
-        applicant.paidDate = new Date().toLocaleDateString('en-GB')
-        applicant.transactionId = `TXN-${Date.now()}`
-      }
+    try {
+      const transactionId = `TXN-${Date.now()}`
+      await updatePaymentStatus({
+        id: selectedPayment.id as Id<"payments">,
+        status: 'completed',
+        transactionId,
+      })
+      setLastTransactionId(transactionId)
+      setShowConfirmModal(false)
+      setShowSuccessModal(true)
+    } catch (error) {
+      console.error('Payment failed:', error)
+      alert('Payment failed. Please try again.')
+    } finally {
+      setIsProcessing(false)
     }
-
-    setIsProcessing(false)
-    setShowConfirmModal(false)
-    setShowSuccessModal(true)
   }
 
   const resetModals = () => {
     setShowPaymentModal(false)
     setShowConfirmModal(false)
     setShowSuccessModal(false)
-    setSelectedApplicant(null)
+    setSelectedPayment(null)
     setSelectedPaymentMethod(null)
   }
 
-  if (isLoading) {
+  // Loading state
+  if (paymentsData === undefined || paymentStats === undefined) {
     return (
       <EmployerLayout>
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -213,7 +149,7 @@ function EmployerPayments() {
             ))}
           </div>
 
-          {/* Applicant Cards Skeleton */}
+          {/* Payment Cards Skeleton */}
           <div className="space-y-4 mb-6">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} variant="card" className="h-40" />
@@ -336,16 +272,16 @@ function EmployerPayments() {
           </div>
         </div>
 
-        {/* Applicants List */}
+        {/* Payments List */}
         <div className="space-y-4">
-          {filteredApplicants.length > 0 ? (
-            filteredApplicants.map((applicant) => (
+          {filteredPayments.length > 0 ? (
+            filteredPayments.map((payment) => (
               <div
-                key={applicant.id}
+                key={payment.id}
                 className="p-6 rounded-2xl border-2 transition-all duration-200 hover:shadow-md"
                 style={{
                   backgroundColor: '#ffffff',
-                  borderColor: applicant.status === 'pending' ? '#fb923c' : '#10b981',
+                  borderColor: payment.status === 'pending' || payment.status === 'ongoing' ? '#fb923c' : '#10b981',
                 }}
               >
                 <div className="flex items-start justify-between gap-6">
@@ -357,7 +293,7 @@ function EmployerPayments() {
                       style={{ backgroundColor: '#94618e' }}
                     >
                       <span className="text-2xl font-bold" style={{ color: '#f8eee7' }}>
-                        {applicant.candidateName.charAt(0)}
+                        {payment.candidateName.charAt(0)}
                       </span>
                     </div>
 
@@ -366,20 +302,20 @@ function EmployerPayments() {
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <h3 className="text-xl font-bold mb-1" style={{ color: '#94618e' }}>
-                            {applicant.candidateName}
+                            {payment.candidateName}
                           </h3>
                           <div className="flex items-center gap-4 flex-wrap text-sm" style={{ color: '#94618e', opacity: 0.7 }}>
                             <span className="flex items-center gap-1">
                               <Briefcase size={14} />
-                              {applicant.jobTitle}
+                              {payment.jobTitle}
                             </span>
                             <span className="flex items-center gap-1">
                               <MapPin size={14} />
-                              {applicant.jobLocation}
+                              {payment.jobLocation}
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar size={14} />
-                              {applicant.workPeriod}
+                              {payment.workPeriod}
                             </span>
                           </div>
                         </div>
@@ -388,38 +324,22 @@ function EmployerPayments() {
                         <span
                           className="px-4 py-1.5 rounded-full text-xs font-bold"
                           style={{
-                            backgroundColor: applicant.status === 'pending' ? '#fed7aa' : '#a7f3d0',
-                            color: applicant.status === 'pending' ? '#ea580c' : '#059669',
+                            backgroundColor: payment.status === 'pending' || payment.status === 'ongoing' ? '#fed7aa' : '#a7f3d0',
+                            color: payment.status === 'pending' || payment.status === 'ongoing' ? '#ea580c' : '#059669',
                           }}
                         >
-                          {applicant.status === 'pending' ? 'Pending Payment' : 'Paid'}
+                          {payment.status === 'pending' || payment.status === 'ongoing' ? 'Pending Payment' : 'Paid'}
                         </span>
                       </div>
 
                       <p className="text-sm mb-3" style={{ color: '#94618e', opacity: 0.6 }}>
-                        {applicant.description}
+                        {payment.description}
                       </p>
 
-                      {/* Work Details */}
-                      <div className="flex items-center gap-6 text-sm" style={{ color: '#94618e' }}>
-                        <div>
-                          <span className="opacity-60">Hours Worked:</span>
-                          <span className="font-bold ml-1">{applicant.hoursWorked}h</span>
-                        </div>
-                        <div>
-                          <span className="opacity-60">Hourly Rate:</span>
-                          <span className="font-bold ml-1">RM {applicant.hourlyRate}/h</span>
-                        </div>
-                        <div>
-                          <span className="opacity-60">Completed:</span>
-                          <span className="font-bold ml-1">{applicant.completionDate}</span>
-                        </div>
-                      </div>
-
                       {/* Transaction ID if paid */}
-                      {applicant.status === 'paid' && applicant.transactionId && (
+                      {payment.status === 'paid' && payment.transactionId && (
                         <div className="mt-2 text-xs" style={{ color: '#94618e', opacity: 0.5 }}>
-                          Transaction ID: {applicant.transactionId} • Paid on {applicant.paidDate}
+                          Transaction ID: {payment.transactionId} • Paid on {payment.paidDate}
                         </div>
                       )}
                     </div>
@@ -432,13 +352,13 @@ function EmployerPayments() {
                         Total Amount
                       </p>
                       <p className="text-3xl font-bold" style={{ color: '#94618e' }}>
-                        RM {applicant.totalAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
+                        RM {payment.totalAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
 
-                    {applicant.status === 'pending' ? (
+                    {payment.status === 'pending' || payment.status === 'ongoing' ? (
                       <button
-                        onClick={() => handlePayClick(applicant)}
+                        onClick={() => handlePayClick(payment)}
                         className="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105 flex items-center gap-2"
                         style={{ backgroundColor: '#94618e', color: '#f8eee7' }}
                       >
@@ -461,7 +381,7 @@ function EmployerPayments() {
           ) : (
             <div className="text-center py-12 rounded-2xl border-2" style={{ backgroundColor: '#f8eee7', borderColor: '#94618e' }}>
               <p className="text-lg" style={{ color: '#94618e', opacity: 0.6 }}>
-                No applicants found matching your filter
+                No payments found matching your filter
               </p>
             </div>
           )}
@@ -475,7 +395,7 @@ function EmployerPayments() {
           title="Select Payment Method"
           showIcon={false}
         >
-          {selectedApplicant && (
+          {selectedPayment && (
             <div className="space-y-6">
               {/* Payment Summary */}
               <div
@@ -488,10 +408,10 @@ function EmployerPayments() {
                       Paying to
                     </p>
                     <h3 className="text-xl font-bold" style={{ color: '#94618e' }}>
-                      {selectedApplicant.candidateName}
+                      {selectedPayment.candidateName}
                     </h3>
                     <p className="text-sm mt-1" style={{ color: '#94618e', opacity: 0.7 }}>
-                      {selectedApplicant.jobTitle} • {selectedApplicant.workPeriod}
+                      {selectedPayment.jobTitle} • {selectedPayment.workPeriod}
                     </p>
                   </div>
                   <div className="text-right">
@@ -499,7 +419,7 @@ function EmployerPayments() {
                       Amount
                     </p>
                     <p className="text-3xl font-bold" style={{ color: '#94618e' }}>
-                      RM {selectedApplicant.totalAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
+                      RM {selectedPayment.totalAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
@@ -570,10 +490,10 @@ function EmployerPayments() {
           title="Confirm Payment"
           showIcon={true}
         >
-          {selectedApplicant && selectedPaymentMethod && (
+          {selectedPayment && selectedPaymentMethod && (
             <div className="space-y-6">
               <p className="text-base" style={{ color: '#94618e' }}>
-                You are about to pay <span className="font-bold">{selectedApplicant.candidateName}</span> for their work as <span className="font-bold">{selectedApplicant.jobTitle}</span>.
+                You are about to pay <span className="font-bold">{selectedPayment.candidateName}</span> for their work as <span className="font-bold">{selectedPayment.jobTitle}</span>.
               </p>
 
               {/* Payment Details */}
@@ -584,19 +504,13 @@ function EmployerPayments() {
                 <div className="flex justify-between items-center">
                   <span style={{ color: '#94618e', opacity: 0.7 }}>Recipient:</span>
                   <span className="font-bold" style={{ color: '#94618e' }}>
-                    {selectedApplicant.candidateName}
+                    {selectedPayment.candidateName}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span style={{ color: '#94618e', opacity: 0.7 }}>Work Period:</span>
                   <span className="font-bold" style={{ color: '#94618e' }}>
-                    {selectedApplicant.workPeriod}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span style={{ color: '#94618e', opacity: 0.7 }}>Hours Worked:</span>
-                  <span className="font-bold" style={{ color: '#94618e' }}>
-                    {selectedApplicant.hoursWorked} hours
+                    {selectedPayment.workPeriod}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -611,7 +525,7 @@ function EmployerPayments() {
                     Total Amount:
                   </span>
                   <span className="text-2xl font-bold" style={{ color: '#94618e' }}>
-                    RM {selectedApplicant.totalAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
+                    RM {selectedPayment.totalAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
@@ -645,7 +559,7 @@ function EmployerPayments() {
           title="Payment Successful!"
           showIcon={true}
         >
-          {selectedApplicant && (
+          {selectedPayment && (
             <div className="space-y-6">
               <div className="text-center">
                 <div
@@ -658,10 +572,10 @@ function EmployerPayments() {
                   You have successfully paid
                 </p>
                 <h3 className="text-2xl font-bold mb-1" style={{ color: '#94618e' }}>
-                  {selectedApplicant.candidateName}
+                  {selectedPayment.candidateName}
                 </h3>
                 <p className="text-3xl font-bold" style={{ color: '#059669' }}>
-                  RM {selectedApplicant.totalAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
+                  RM {selectedPayment.totalAmount.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
                 </p>
               </div>
 
@@ -673,12 +587,12 @@ function EmployerPayments() {
                   Transaction ID
                 </p>
                 <p className="font-mono font-bold" style={{ color: '#059669' }}>
-                  TXN-{Date.now()}
+                  {lastTransactionId}
                 </p>
               </div>
 
               <p className="text-sm text-center" style={{ color: '#94618e', opacity: 0.6 }}>
-                A receipt has been sent to both you and {selectedApplicant.candidateName}
+                A receipt has been sent to both you and {selectedPayment.candidateName}
               </p>
 
               {/* Actions */}

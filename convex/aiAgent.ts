@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { action, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { parseQuery, scoreJob, extractValidJSON, type Job, type ScoredJob } from "./searchEngine";
 
 // Tool definitions for Claude
 const tools = [
@@ -766,69 +767,152 @@ export const seekerChat = action({
       return { response, appliedJobs };
     }
 
-    // For search action, search jobs directly and return structured data
+    // For search action, use AI to understand the query and match jobs intelligently
     if (args.actionType === "search") {
-      // Extract meaningful keywords from the user's message
-      const message = args.message.toLowerCase();
+      // First, get all available jobs to provide context to the AI
+      const allJobs = await ctx.runQuery(internal.aiAgent._searchJobs, {}) as Array<{
+        id: string;
+        title: string;
+        company: string;
+        location: string;
+        salary: string;
+        type: string;
+        description: string;
+      }>;
 
-      // Check if it's a generic/broad query (wants all jobs)
-      const genericPhrases = ['any job', 'all job', 'find me a job', 'show me job', 'list job', 'what job', 'available job'];
-      const isGenericQuery = genericPhrases.some(phrase => message.includes(phrase)) || message.length < 10;
-
-      // Extract potential keywords (job titles, types, etc.)
-      const jobKeywords = ['waiter', 'waitress', 'cashier', 'barista', 'delivery', 'driver', 'tutor', 'sales', 'retail', 'server', 'cook', 'chef', 'cleaner', 'admin', 'assistant', 'part-time', 'full-time', 'remote'];
-      const locationKeywords = ['kuala lumpur', 'kl', 'petaling jaya', 'pj', 'subang', 'shah alam', 'penang', 'johor', 'selangor'];
-
-      let keyword: string | undefined;
-      let location: string | undefined;
-      let jobType: string | undefined;
-
-      // Only apply filters if not a generic query
-      if (!isGenericQuery) {
-        // Find job keyword
-        for (const kw of jobKeywords) {
-          if (message.includes(kw)) {
-            keyword = kw;
-            break;
-          }
-        }
-
-        // Find location
-        for (const loc of locationKeywords) {
-          if (message.includes(loc)) {
-            location = loc === 'kl' ? 'kuala lumpur' : loc === 'pj' ? 'petaling jaya' : loc;
-            break;
-          }
-        }
-
-        // Find job type
-        if (message.includes('part-time') || message.includes('part time')) {
-          jobType = 'part-time';
-        } else if (message.includes('full-time') || message.includes('full time')) {
-          jobType = 'full-time';
-        }
+      if (allJobs.length === 0) {
+        return {
+          response: 'No jobs are currently available. Please check back later.',
+          matchingJobs: []
+        };
       }
 
-      const jobs = await ctx.runQuery(internal.aiAgent._searchJobs, {
-        keyword,
-        location,
-        jobType,
-      }) as Array<{ id: string; title: string; company: string; location: string; salary: string; type: string }>;
+      // Use AI to understand the user's query and match jobs intelligently
+      const searchPrompt = `You are a precise job matching AI for Cepat Hire. Analyze the job seeker's query and return ONLY jobs that are genuinely relevant.
 
-      const matchingJobs = jobs.map(job => ({
+CRITICAL RULES:
+- Be STRICT in matching - only return jobs that truly match the user's intent
+- If the query is vague (like "any job" or just "job"), still try to infer preferences
+- If NO jobs match the criteria, return an EMPTY matchedJobIndices array
+- Never return all jobs unless the user explicitly asks to "see all jobs" or "list everything"
+
+User's search query: "${args.message}"
+
+Available jobs (${allJobs.length} total):
+${allJobs.map((job, i) => `[${i}] Title: "${job.title}" | Company: "${job.company}" | Location: "${job.location || 'Not specified'}" | Type: "${job.type || 'Not specified'}" | Salary: "${job.salary || 'Competitive'}" | Desc: "${job.description || 'No description'}"`).join('\n')}
+
+MATCHING CRITERIA - Apply these filters based on the user's query:
+1. JOB TYPE/ROLE: Match job titles, skills, or industries mentioned (use semantic matching - "server"="waiter", "F&B"="restaurant/cafe", "retail"="sales assistant")
+2. LOCATION: Match location if specified (KL=Kuala Lumpur, PJ=Petaling Jaya)
+3. JOB TYPE: Match part-time/full-time/contract if mentioned
+4. SALARY: Consider salary expectations if mentioned
+
+Respond with ONLY this JSON (no other text):
+{"matchedJobIndices":[<indices of matching jobs>],"searchSummary":"<friendly message explaining what was found and why>"}
+
+Examples:
+- Query "waiter job" with cafe jobs → {"matchedJobIndices":[0,2],"searchSummary":"Found 2 food service jobs matching your search for waiter positions."}
+- Query "remote work" with no remote jobs → {"matchedJobIndices":[],"searchSummary":"No remote positions are currently available. Try searching for on-site jobs in your area."}`;
+
+      try {
+        const searchResponse = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 512,
+            messages: [{ role: "user", content: searchPrompt }],
+          }),
+        });
+
+        if (!searchResponse.ok) {
+          const errorText = await searchResponse.text();
+          console.error("AI search API error:", errorText);
+          throw new Error(`AI search error: ${searchResponse.status}`);
+        }
+
+        const searchResult: ClaudeResponse = await searchResponse.json();
+        const textContent = searchResult.content.find(block => block.type === "text");
+        const aiText = textContent?.text || "";
+
+        console.log("AI response:", aiText); // Debug log
+
+        // Parse the AI's JSON response using robust extraction
+        const parsed = extractValidJSON(aiText);
+        if (parsed) {
+
+          // Validate the parsed indices
+          const validIndices = (parsed.matchedJobIndices || [])
+            .filter(idx => typeof idx === 'number' && idx >= 0 && idx < allJobs.length);
+
+          const matchingJobs = validIndices.map(idx => ({
+            id: String(allJobs[idx].id),
+            title: allJobs[idx].title,
+            company: allJobs[idx].company,
+            location: allJobs[idx].location || 'Not specified',
+            salary: allJobs[idx].salary || 'Competitive',
+            type: allJobs[idx].type || 'Part-time',
+          }));
+
+          const response = matchingJobs.length > 0
+            ? parsed.searchSummary || `Found ${matchingJobs.length} job(s) matching your criteria. Select the ones you'd like to apply to.`
+            : parsed.searchSummary || 'No jobs found matching your specific criteria. Try broadening your search or using different keywords.';
+
+          return { response, matchingJobs };
+        } else {
+          console.error("Failed to parse AI JSON response:", aiText);
+        }
+      } catch (error) {
+        console.error("AI search error:", error);
+      }
+
+      // Fallback: Use SEO search engine for intelligent keyword matching
+      const parsedQuery = parseQuery(args.message);
+
+      // Convert jobs to the format expected by the search engine
+      const jobsForSearch: Job[] = allJobs.map(job => ({
         id: String(job.id),
         title: job.title,
         company: job.company,
-        location: job.location || 'Not specified',
-        salary: job.salary || 'Competitive',
-        type: job.type || 'Part-time',
+        location: job.location || '',
+        salary: job.salary || '',
+        type: job.type || '',
+        description: job.description || '',
       }));
 
-      const response = matchingJobs.length > 0
-        ? `Found ${matchingJobs.length} job(s)${keyword ? ` matching "${keyword}"` : ''}. Select the ones you'd like to apply to.`
-        : 'No jobs found matching your criteria. Try a different search.';
+      // Score all jobs using SEO-style relevance scoring
+      const scoredJobs: ScoredJob[] = jobsForSearch
+        .map(job => scoreJob(job, parsedQuery))
+        .filter(scored => scored.score > 0)
+        .sort((a, b) => b.score - a.score);
 
-      return { response, matchingJobs };
+      // Return top 10 matches
+      const matchedJobs = scoredJobs
+        .slice(0, 10)
+        .map(scored => ({
+          id: scored.job.id,
+          title: scored.job.title,
+          company: scored.job.company,
+          location: scored.job.location || 'Not specified',
+          salary: scored.job.salary || 'Competitive',
+          type: scored.job.type || 'Part-time',
+        }));
+
+      if (matchedJobs.length === 0) {
+        return {
+          response: 'No jobs found matching your search. Try using different keywords like job titles (waiter, cashier, driver) or locations (KL, PJ, Penang).',
+          matchingJobs: []
+        };
+      }
+
+      return {
+        response: `Found ${matchedJobs.length} job(s) matching your criteria. Select the ones you'd like to apply to.`,
+        matchingJobs: matchedJobs
+      };
     }
 
     // Default AI chat mode (for general queries)

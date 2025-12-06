@@ -14,7 +14,7 @@ interface ApplicantData {
   experience?: string
   skills?: string
   appliedDate: string
-  status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected'
+  status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'hired'
   avatar?: string
 }
 
@@ -48,8 +48,13 @@ const getStatusStyle = (status: ApplicantData['status']) => {
       text: '#991b1b',
       label: 'Rejected',
     },
+    hired: {
+      bg: '#bbf7d0',
+      text: '#15803d',
+      label: 'Hired',
+    },
   }
-  return styles[status]
+  return styles[status] || styles.pending
 }
 
 export const ApplicantCard = ({

@@ -291,6 +291,11 @@ function RouteComponent() {
   )
   const candidateId = candidate?._id
 
+  // Get applied job IDs
+  const appliedJobIds = useQuery(api.seeker.getAppliedJobIds,
+    candidateId ? { candidateId } : "skip"
+  )
+
   // Mutations
   const applyToJob = useMutation(api.seeker.applyToJob)
   const saveJob = useMutation(api.seeker.saveJob)
@@ -691,6 +696,7 @@ function RouteComponent() {
                     key={job.id}
                     variant="seeker"
                     job={job}
+                    isApplied={appliedJobIds?.includes(job.id as Id<'jobs'>) ?? false}
                     onApply={handleApply}
                     onSave={handleSave}
                     onViewDetails={handleViewDetails}
