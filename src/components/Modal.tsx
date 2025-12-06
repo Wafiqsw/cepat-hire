@@ -131,7 +131,7 @@ export const Modal = ({
         )}
 
         {/* Content */}
-        <div className="px-8 pb-8 text-center">
+        <div className="px-8 pt-8 pb-8 text-center">
           {title && (
             <h3
               className="text-2xl font-bold mb-4"

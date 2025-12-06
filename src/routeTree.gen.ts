@@ -17,6 +17,7 @@ import { Route as SeekerSavedJobsRouteImport } from './routes/seeker/saved-jobs'
 import { Route as SeekerProfileRouteImport } from './routes/seeker/profile'
 import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
 import { Route as SeekerDashboardRouteImport } from './routes/seeker/dashboard'
+import { Route as SeekerBrowseJobsRouteImport } from './routes/seeker/browse-jobs'
 import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -67,6 +68,11 @@ const SeekerPaymentsRoute = SeekerPaymentsRouteImport.update({
 const SeekerDashboardRoute = SeekerDashboardRouteImport.update({
   id: '/seeker/dashboard',
   path: '/seeker/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerBrowseJobsRoute = SeekerBrowseJobsRouteImport.update({
+  id: '/seeker/browse-jobs',
+  path: '/seeker/browse-jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SeekerApplicationsRoute = SeekerApplicationsRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/browse-jobs': typeof SeekerBrowseJobsRoute
   '/seeker/dashboard': typeof SeekerDashboardRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/seeker/profile': typeof SeekerProfileRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/browse-jobs': typeof SeekerBrowseJobsRoute
   '/seeker/dashboard': typeof SeekerDashboardRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/seeker/profile': typeof SeekerProfileRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/browse-jobs': typeof SeekerBrowseJobsRoute
   '/seeker/dashboard': typeof SeekerDashboardRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/seeker/profile': typeof SeekerProfileRoute
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/employer/payments'
     | '/seeker/applications'
+    | '/seeker/browse-jobs'
     | '/seeker/dashboard'
     | '/seeker/payments'
     | '/seeker/profile'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/employer/payments'
     | '/seeker/applications'
+    | '/seeker/browse-jobs'
     | '/seeker/dashboard'
     | '/seeker/payments'
     | '/seeker/profile'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/employer/payments'
     | '/seeker/applications'
+    | '/seeker/browse-jobs'
     | '/seeker/dashboard'
     | '/seeker/payments'
     | '/seeker/profile'
@@ -263,6 +275,7 @@ export interface RootRouteChildren {
   AuthRegisterRoute: typeof AuthRegisterRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
   SeekerApplicationsRoute: typeof SeekerApplicationsRoute
+  SeekerBrowseJobsRoute: typeof SeekerBrowseJobsRoute
   SeekerDashboardRoute: typeof SeekerDashboardRoute
   SeekerPaymentsRoute: typeof SeekerPaymentsRoute
   SeekerProfileRoute: typeof SeekerProfileRoute
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/seeker/dashboard'
       fullPath: '/seeker/dashboard'
       preLoaderRoute: typeof SeekerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/browse-jobs': {
+      id: '/seeker/browse-jobs'
+      path: '/seeker/browse-jobs'
+      fullPath: '/seeker/browse-jobs'
+      preLoaderRoute: typeof SeekerBrowseJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/seeker/applications': {
@@ -423,6 +443,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRegisterRoute: AuthRegisterRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,
   SeekerApplicationsRoute: SeekerApplicationsRoute,
+  SeekerBrowseJobsRoute: SeekerBrowseJobsRoute,
   SeekerDashboardRoute: SeekerDashboardRoute,
   SeekerPaymentsRoute: SeekerPaymentsRoute,
   SeekerProfileRoute: SeekerProfileRoute,
