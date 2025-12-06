@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
+import { useAuth } from '../contexts/AuthContext'
 import {
   LayoutDashboard,
   Search,
@@ -29,10 +30,10 @@ const seekerNavItems = [
 
 export const SeekerLayout = ({ children }: SeekerLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { logout } = useAuth()
 
-  const handleLogout = () => {
-    // TODO: Implement actual logout logic (clear session, redirect to home, etc.)
-    console.log('Logging out...')
+  const handleLogout = async () => {
+    await logout()
     window.location.href = '/'
   }
 

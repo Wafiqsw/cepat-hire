@@ -1,56 +1,64 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
 import { Briefcase, Wallet, Bookmark, User, TrendingUp, Clock } from 'lucide-react'
 import { Button } from '../../components'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/dashboard')({
   component: DashboardPage,
 })
 
+// TODO: Replace with actual authenticated candidate ID
+const MOCK_CANDIDATE_ID = "jn7e1p2s8t9r7ewxvb8x7s5z4h6z9rf5" as Id<"candidates">
+
 function DashboardPage() {
   const navigate = useNavigate()
 
-  // Summary stats
-  const stats = {
+  // Fetch data from Convex
+  const candidates = useQuery(api.candidates.list, {})
+  const candidateId = candidates?.[0]?._id
+
+  const dashboardStats = useQuery(api.seeker.getDashboardStats,
+    candidateId ? { candidateId } : "skip"
+  )
+  const recentApplicationsData = useQuery(api.seeker.getRecentApplications,
+    candidateId ? { candidateId, limit: 3 } : "skip"
+  )
+
+  // Transform stats
+  const stats = dashboardStats ? {
     applications: {
-      total: 5,
-      pending: 2,
-      accepted: 1,
-      interviewing: 1,
+      total: dashboardStats.applications.total,
+      pending: dashboardStats.applications.pending,
+      accepted: dashboardStats.applications.shortlisted,
+      interviewing: dashboardStats.applications.reviewed,
     },
     earnings: {
-      total: 425.50,
-      thisMonth: 425.50,
-      available: 404.23,
+      total: dashboardStats.earnings.total,
+      thisMonth: dashboardStats.earnings.completed,
+      available: dashboardStats.earnings.available,
     },
-    savedJobs: 4,
-    profileCompletion: 85,
+    savedJobs: dashboardStats.savedJobs,
+    profileCompletion: dashboardStats.profileCompletion,
+  } : {
+    applications: { total: 0, pending: 0, accepted: 0, interviewing: 0 },
+    earnings: { total: 0, thisMonth: 0, available: 0 },
+    savedJobs: 0,
+    profileCompletion: 0,
   }
 
-  // Recent applications
-  const recentApplications = [
-    {
-      id: '1',
-      jobTitle: 'Delivery Rider',
-      company: 'FoodPanda',
-      status: 'accepted' as const,
-      appliedDate: '05/12/2024',
-    },
-    {
-      id: '2',
-      jobTitle: 'Event Helper',
-      company: 'Event Masters',
-      status: 'pending' as const,
-      appliedDate: '04/12/2024',
-    },
-    {
-      id: '3',
-      jobTitle: 'Warehouse Packer',
-      company: 'Logistics Hub',
-      status: 'rejected' as const,
-      appliedDate: '03/12/2024',
-    },
-  ]
+  // Transform recent applications
+  const recentApplications = recentApplicationsData?.map((app) => ({
+    id: app._id,
+    jobTitle: app.job?.title || 'Unknown Job',
+    company: app.job?.company || 'Unknown Company',
+    status: (app.status === 'shortlisted' ? 'accepted' :
+             app.status === 'reviewed' ? 'interviewing' :
+             app.status) as 'accepted' | 'pending' | 'rejected' | 'interviewing',
+    appliedDate: new Date(app.createdAt).toLocaleDateString('en-GB'),
+  })) || []
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -60,6 +68,21 @@ function DashboardPage() {
       interviewing: '#3b82f6',
     }
     return colors[status as keyof typeof colors] || '#94618e'
+  }
+
+  // Loading state
+  if (dashboardStats === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
   }
 
   return (

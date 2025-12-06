@@ -1,4 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
 import {
   WorkHistoryList,
@@ -15,48 +17,69 @@ export const Route = createFileRoute('/seeker/profile')({
 function ProfilePage() {
   const navigate = useNavigate()
 
-  // Mock data - replace with real data from API
-  const profileData = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'New York, NY',
-    joinDate: 'January 2024',
-    bio: 'Experienced software developer with 5+ years of expertise in full-stack development. Passionate about building scalable applications and learning new technologies.',
+  // Get candidate ID
+  const candidates = useQuery(api.candidates.list, {})
+  const candidateId = candidates?.[0]?._id
+
+  // Fetch profile, work history and payment stats from backend
+  const profile = useQuery(api.seeker.getProfile,
+    candidateId ? { candidateId } : "skip"
+  )
+  const workHistoryData = useQuery(api.seeker.getWorkHistory,
+    candidateId ? { candidateId } : "skip"
+  )
+  const paymentStats = useQuery(api.seeker.getMyPaymentStats,
+    candidateId ? { candidateId } : "skip"
+  )
+
+  // Transform profile data
+  const profileData = profile ? {
+    name: profile.name || 'Unknown',
+    email: profile.email || '',
+    phone: profile.phone || '',
+    location: profile.location || '',
+    joinDate: profile.createdAt
+      ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      : 'Recently',
+    bio: profile.resumeText || profile.experience || '',
+  } : {
+    name: 'Loading...',
+    email: '',
+    phone: '',
+    location: '',
+    joinDate: '',
+    bio: '',
   }
 
-  const workHistory = [
-    {
-      id: '1',
-      company: 'Food Delivery',
-      position: 'Delivery Rider',
-      location: 'Kuala Lumpur',
-      startDate: '01/11/2024',
-      endDate: 'Present',
-      description: 'Delivering food orders around KL area. Flexible hours, good tips.',
-      isCurrentJob: true,
-    },
-    {
-      id: '2',
-      company: 'Event Setup',
-      position: 'Event Helper',
-      location: 'Petaling Jaya',
-      startDate: '15/11/2024',
-      endDate: '17/11/2024',
-      description: 'Helped set up booths and equipment for weekend tech expo.',
-      isCurrentJob: false,
-    },
-    {
-      id: '3',
-      company: 'Moving Service',
-      position: 'Mover',
-      location: 'Shah Alam',
-      startDate: '10/11/2024',
-      endDate: '10/11/2024',
-      description: 'Helped family move furniture and boxes to new house. One day job.',
-      isCurrentJob: false,
-    },
-  ]
+  // Transform work history
+  const workHistory = workHistoryData?.map((work) => ({
+    id: work.id,
+    company: work.company,
+    position: work.position,
+    location: work.location,
+    startDate: work.startDate,
+    endDate: work.endDate,
+    description: work.description,
+    isCurrentJob: work.isCurrentJob,
+  })) || []
+
+  // Wallet balance from payment stats
+  const walletBalance = paymentStats?.totalEarnings || 0
+
+  // Loading state
+  if (profile === undefined || workHistoryData === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto space-y-8 px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
 
   return (
     <SeekerLayout>
@@ -149,7 +172,7 @@ function ProfilePage() {
           {/* Wallet Card - Aligned with Profile */}
           <div className="h-full flex flex-col">
             <div className="flex-1 flex flex-col justify-center">
-              <WalletCard balance={12500} currency="RM" />
+              <WalletCard balance={walletBalance} currency="RM" />
 
               {/* Quick Stats Card */}
               <div
@@ -204,7 +227,11 @@ function ProfilePage() {
                 </p>
               </div>
             </div>
-            <Button variant="primary" size="md">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => navigate({ to: '/seeker/browse-jobs' })}
+            >
               <Briefcase size={16} />
               Look for more work!
             </Button>

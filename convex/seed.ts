@@ -321,7 +321,7 @@ export const seedData = mutation({
 export const clearAll = mutation({
   args: {},
   handler: async (ctx) => {
-    const tables = ["payments", "applications", "candidates", "jobs", "conversations"];
+    const tables = ["savedJobs", "payments", "applications", "candidates", "jobs", "conversations"];
     for (const table of tables) {
       const docs = await ctx.db.query(table as any).collect();
       for (const doc of docs) {

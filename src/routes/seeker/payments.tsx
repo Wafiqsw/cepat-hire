@@ -1,4 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
 import { PaymentCard, Modal, ModalActions, Button } from '../../components'
 import { Wallet, Clock, CheckCircle, AlertCircle, Filter, Building2 } from 'lucide-react'
@@ -14,6 +16,18 @@ function SeekerPayments() {
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [accountNumber, setAccountNumber] = useState('')
 
+  // Get candidate ID
+  const candidates = useQuery(api.candidates.list, {})
+  const candidateId = candidates?.[0]?._id
+
+  // Fetch payments and stats from backend
+  const paymentsData = useQuery(api.seeker.getMyPayments,
+    candidateId ? { candidateId } : "skip"
+  )
+  const paymentStats = useQuery(api.seeker.getMyPaymentStats,
+    candidateId ? { candidateId } : "skip"
+  )
+
   // Malaysian banks
   const malaysianBanks = [
     { id: 'maybank', name: 'Maybank', color: '#FFD700' },
@@ -24,75 +38,41 @@ function SeekerPayments() {
     { id: 'ambank', name: 'AmBank', color: '#ED1C24' },
   ]
 
-  // Sample payment data for gig work
-  const payments = [
-    {
-      id: '1',
-      amount: 150.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '05/12/2024',
-      description: 'Food Delivery - 8 orders completed',
-      paymentMethod: 'E-Wallet',
-      transactionId: 'TXN-2024-001234',
-    },
-    {
-      id: '2',
-      amount: 200.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: '04/12/2024',
-      description: 'Event Helper - Tech Expo Setup',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001235',
-    },
-    {
-      id: '3',
-      amount: 80.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '03/12/2024',
-      description: 'Moving Service - 1 day job',
-      paymentMethod: 'Cash',
-      transactionId: 'TXN-2024-001236',
-    },
-    {
-      id: '4',
-      amount: 120.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: '02/12/2024',
-      description: 'Warehouse Packing - Weekend shift',
-      paymentMethod: 'E-Wallet',
-      transactionId: 'TXN-2024-001237',
-    },
-    {
-      id: '5',
-      amount: 95.50,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '01/12/2024',
-      description: 'Delivery Rider - 6 orders',
-      paymentMethod: 'E-Wallet',
-      transactionId: 'TXN-2024-001238',
-    },
-  ]
+  // Transform payment data for display
+  const payments = paymentsData?.map((payment) => ({
+    id: payment._id,
+    amount: payment.amount,
+    currency: payment.currency,
+    status: payment.status as 'completed' | 'pending',
+    date: new Date(payment.createdAt).toLocaleDateString('en-GB'),
+    description: payment.description,
+    paymentMethod: payment.paymentMethod,
+    transactionId: payment.transactionId,
+  })) || []
 
   const filteredPayments = payments.filter(payment => {
     return statusFilter === 'all' || payment.status === statusFilter
   })
 
-  // Calculate wallet balances
-  const completedEarnings = payments
-    .filter(p => p.status === 'completed')
-    .reduce((sum, p) => sum + p.amount, 0)
+  // Use stats from backend
+  const totalBalance = paymentStats?.totalEarnings || 0
+  const pendingEarnings = paymentStats?.pendingEarnings || 0
+  const availableToWithdraw = paymentStats?.availableToWithdraw || 0
 
-  const pendingEarnings = payments
-    .filter(p => p.status === 'pending')
-    .reduce((sum, p) => sum + p.amount, 0)
-
-  const totalBalance = completedEarnings + pendingEarnings
-  const availableToWithdraw = completedEarnings * 0.95 // 95% available, 5% held for early withdrawal
+  // Loading state
+  if (paymentsData === undefined || paymentStats === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
 
   return (
     <SeekerLayout>

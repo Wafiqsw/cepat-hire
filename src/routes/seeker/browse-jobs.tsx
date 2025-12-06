@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useQuery, useMutation, useAction } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { Search, MapPin, Building2, DollarSign, Clock, Calendar, Briefcase, Heart, Share2 } from 'lucide-react'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 import { JobCard } from '../../components/JobCard'
 import { Modal } from '../../components/Modal'
@@ -10,88 +13,18 @@ export const Route = createFileRoute('/seeker/browse-jobs')({
   component: RouteComponent,
 })
 
-const mockJobs = [
-  {
-    id: '1',
-    title: 'Waiter/Waitress',
-    company: 'Cafe Delight',
-    location: 'Kuala Lumpur, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 8 - 12/hour',
-    postedDate: '2 days ago',
-    description: 'Looking for friendly waiters/waitresses for evening shifts at our busy cafe.',
-  },
-  {
-    id: '2',
-    title: 'Retail Sales Assistant',
-    company: 'Fashion Hub',
-    location: 'Penang, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 1,500 - 2,000',
-    postedDate: '1 week ago',
-    description: 'Join our team to assist customers and manage store operations on weekends.',
-  },
-  {
-    id: '3',
-    title: 'Delivery Rider',
-    company: 'QuickFood Delivery',
-    location: 'Johor Bahru, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 10 - 15/hour',
-    postedDate: '3 days ago',
-    description: 'Flexible hours delivering food to customers. Own motorcycle required.',
-  },
-  {
-    id: '4',
-    title: 'Tutor',
-    company: 'Smart Learning Center',
-    location: 'Selangor, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 30 - 50/hour',
-    postedDate: '5 days ago',
-    description: 'Teach students in various subjects. Math and Science tutors needed.',
-  },
-  {
-    id: '5',
-    title: 'Cashier',
-    company: 'Supermart Express',
-    location: 'Kuala Lumpur, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 1,800 - 2,200',
-    postedDate: '1 day ago',
-    description: 'Handle cash transactions and provide excellent customer service.',
-  },
-  {
-    id: '6',
-    title: 'Barista',
-    company: 'Coffee Corner',
-    location: 'Penang, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 9 - 13/hour',
-    postedDate: '4 days ago',
-    description: 'Make and serve coffee beverages. Experience with espresso machines preferred.',
-  },
-  {
-    id: '7',
-    title: 'Event Staff',
-    company: 'EventPro Management',
-    location: 'Selangor, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 100 - 150/day',
-    postedDate: '2 days ago',
-    description: 'Help with event setup, registration, and crowd management on weekends.',
-  },
-  {
-    id: '8',
-    title: 'Pet Sitter',
-    company: 'Paws & Claws Care',
-    location: 'Kuala Lumpur, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 25 - 40/visit',
-    postedDate: '6 days ago',
-    description: 'Care for pets while owners are away. Must love animals.',
-  },
-]
+// Helper to format relative time
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now()
+  const diff = now - timestamp
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (days === 0) return 'Today'
+  if (days === 1) return '1 day ago'
+  if (days < 7) return `${days} days ago`
+  if (days < 14) return '1 week ago'
+  return `${Math.floor(days / 7)} weeks ago`
+}
 
 // Extended job details data
 const jobDetailsData: Record<string, any> = {
@@ -327,15 +260,48 @@ function RouteComponent() {
   const [aiJobPrompt, setAiJobPrompt] = useState('')
   const [aiActionType, setAiActionType] = useState<'auto-apply' | 'list-jobs'>('list-jobs')
   const [aiPromptSubmitted, setAiPromptSubmitted] = useState(false)
+  const [aiResponse, setAiResponse] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
 
-  const handleApply = (jobId: string) => {
-    console.log('Applied to job:', jobId)
-    // TODO: Implement actual apply logic
+  // Fetch real data from Convex
+  const jobs = useQuery(api.jobs.list, { status: 'open' })
+  const candidates = useQuery(api.candidates.list, {})
+  const candidateId = candidates?.[0]?._id
+
+  // Mutations
+  const applyToJob = useMutation(api.seeker.applyToJob)
+  const saveJob = useMutation(api.seeker.saveJob)
+  const seekerChat = useAction(api.aiAgent.seekerChat)
+
+  // Transform jobs for display
+  const jobsForDisplay = jobs?.map((job) => ({
+    id: job._id,
+    title: job.title,
+    company: job.company,
+    location: job.location || 'Remote',
+    type: job.type || 'Part-time',
+    salary: job.salary || 'Competitive',
+    postedDate: formatRelativeTime(job.createdAt),
+    description: job.description,
+    image: job.image,
+  })) || []
+
+  const handleApply = async (jobId: string) => {
+    if (!candidateId) return
+    try {
+      await applyToJob({ candidateId, jobId: jobId as Id<'jobs'> })
+    } catch (error) {
+      console.error('Failed to apply:', error)
+    }
   }
 
-  const handleSave = (jobId: string) => {
-    console.log('Saved job:', jobId)
-    // TODO: Implement actual save logic
+  const handleSave = async (jobId: string) => {
+    if (!candidateId) return
+    try {
+      await saveJob({ candidateId, jobId: jobId as Id<'jobs'> })
+    } catch (error) {
+      console.error('Failed to save:', error)
+    }
   }
 
   const handleViewDetails = (jobId: string) => {
@@ -348,18 +314,29 @@ function RouteComponent() {
     setSelectedJobId(null)
   }
 
-  const handleAiPromptSubmit = () => {
-    if (aiJobPrompt.trim()) {
-      setAiPromptSubmitted(true)
-      console.log('AI Prompt:', aiJobPrompt)
-      console.log('Action Type:', aiActionType)
-      // TODO: Implement AI logic based on actionType
-      if (aiActionType === 'auto-apply') {
-        console.log('AI will auto-apply to matching jobs')
-      } else {
-        console.log('AI will list matching jobs')
+  const handleAiPromptSubmit = async () => {
+    if (!aiJobPrompt.trim() || !candidateId) return
+
+    setAiLoading(true)
+    setAiPromptSubmitted(true)
+    setAiResponse(null)
+
+    try {
+      const result = await seekerChat({
+        message: aiJobPrompt,
+        conversationId: `seeker-${candidateId}`,
+        candidateId,
+        actionType: aiActionType,
+      })
+      setAiResponse(result.response)
+      if (result.appliedJobs && result.appliedJobs.length > 0) {
+        setAiResponse(prev => `${prev}\n\nApplied to: ${result.appliedJobs!.join(', ')}`)
       }
-      setTimeout(() => setAiPromptSubmitted(false), 5000) // Hide message after 5 seconds
+    } catch (error) {
+      console.error('AI error:', error)
+      setAiResponse('Sorry, there was an error processing your request. Please try again.')
+    } finally {
+      setAiLoading(false)
     }
   }
 
@@ -390,7 +367,7 @@ function RouteComponent() {
   }
 
   // Filter jobs based on selected criteria
-  const filteredJobs = mockJobs.filter((job) => {
+  const filteredJobs = jobsForDisplay.filter((job) => {
     const matchesSearch = searchKeyword === '' ||
       job.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
       job.company.toLowerCase().includes(searchKeyword.toLowerCase()) ||
@@ -404,6 +381,21 @@ function RouteComponent() {
 
     return matchesSearch && matchesJobType && matchesLocation
   })
+
+  // Loading state
+  if (jobs === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading jobs...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
 
   return (
     <SeekerLayout>
@@ -507,11 +499,33 @@ function RouteComponent() {
                   </button>
                 </div>
 
-                {aiPromptSubmitted && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg animate-fade-in" style={{ backgroundColor: '#dcfce7' }}>
-                    <span className="text-sm font-medium" style={{ color: '#16a34a' }}>
-                      ✓ AI has received your prompt! {aiActionType === 'auto-apply' ? 'Auto-applying to matching jobs...' : 'Finding matching jobs...'}
+                {aiLoading && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg animate-pulse" style={{ backgroundColor: '#fef3c7' }}>
+                    <span className="text-sm font-medium" style={{ color: '#d97706' }}>
+                      {aiActionType === 'auto-apply' ? 'Auto-applying to matching jobs...' : 'Finding matching jobs...'}
                     </span>
+                  </div>
+                )}
+
+                {aiResponse && !aiLoading && (
+                  <div className="p-4 rounded-lg" style={{ backgroundColor: '#dcfce7', border: '1px solid #16a34a' }}>
+                    <p className="text-sm font-medium mb-2" style={{ color: '#16a34a' }}>
+                      AI Response:
+                    </p>
+                    <p className="text-sm whitespace-pre-wrap" style={{ color: '#15803d' }}>
+                      {aiResponse}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setAiResponse(null)
+                        setAiPromptSubmitted(false)
+                        setAiJobPrompt('')
+                      }}
+                      className="mt-3 text-xs underline"
+                      style={{ color: '#16a34a' }}
+                    >
+                      Clear response
+                    </button>
                   </div>
                 )}
               </div>
@@ -556,8 +570,8 @@ function RouteComponent() {
           showCloseButton={true}
         >
           {selectedJobId && (() => {
-            const job = mockJobs.find(j => j.id === selectedJobId)
-            const details = jobDetailsData[selectedJobId]
+            const job = jobsForDisplay.find(j => j.id === selectedJobId)
+            const details = jobDetailsData[selectedJobId] || {}
 
             if (!job) return null
 
@@ -757,7 +771,7 @@ function RouteComponent() {
 
         {/* Apply Confirmation Modal */}
         {selectedJobId && (() => {
-          const job = mockJobs.find(j => j.id === selectedJobId)
+          const job = jobsForDisplay.find(j => j.id === selectedJobId)
           if (!job) return null
 
           return (
@@ -804,7 +818,7 @@ function RouteComponent() {
 
         {/* Success Modal */}
         {selectedJobId && (() => {
-          const job = mockJobs.find(j => j.id === selectedJobId)
+          const job = jobsForDisplay.find(j => j.id === selectedJobId)
           if (!job) return null
 
           return (

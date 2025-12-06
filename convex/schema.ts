@@ -98,4 +98,13 @@ export default defineSchema({
     .index("by_job", ["jobId"])
     .index("by_candidate", ["candidateId"])
     .index("by_status", ["status"]),
+
+  savedJobs: defineTable({
+    candidateId: v.id("candidates"),
+    jobId: v.id("jobs"),
+    savedAt: v.number(),
+  })
+    .index("by_candidate", ["candidateId"])
+    .index("by_job", ["jobId"])
+    .index("by_candidate_job", ["candidateId", "jobId"]),
 });

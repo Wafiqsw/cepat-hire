@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AvatarPlaceholder, Button, Input } from '../../components'
 import { ArrowLeft, Save } from 'lucide-react'
 
@@ -11,20 +13,76 @@ export const Route = createFileRoute('/seeker/update-profile')({
 function UpdateProfilePage() {
   const navigate = useNavigate()
 
+  // Get candidate ID
+  const candidates = useQuery(api.candidates.list, {})
+  const candidateId = candidates?.[0]?._id
+
+  // Fetch profile from backend
+  const profile = useQuery(api.seeker.getProfile,
+    candidateId ? { candidateId } : "skip"
+  )
+
+  // Update mutation
+  const updateProfile = useMutation(api.seeker.updateProfile)
+
   // Form state
   const [formData, setFormData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+60 12-345 6789',
-    location: 'Kuala Lumpur',
-    bio: 'Looking for part-time and gig work opportunities in KL area. Available on weekends and evenings.',
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    bio: '',
   })
+  const [isSaving, setIsSaving] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Initialize form with profile data
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || '',
+        email: profile.email || '',
+        phone: profile.phone || '',
+        location: profile.location || '',
+        bio: profile.resumeText || profile.experience || '',
+      })
+    }
+  }, [profile])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Saving profile:', formData)
-    // Here you would call your API to save the profile
-    navigate({ to: '/seeker/profile' })
+    if (!candidateId) return
+
+    setIsSaving(true)
+    try {
+      await updateProfile({
+        candidateId,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.location,
+        resumeText: formData.bio,
+      })
+      navigate({ to: '/seeker/profile' })
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Loading state
+  if (profile === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
   }
 
   const handleCancel = () => {
@@ -166,15 +224,17 @@ function UpdateProfilePage() {
               type="submit"
               variant="primary"
               size="lg"
+              disabled={isSaving}
             >
               <Save size={20} />
-              Save Changes
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
             <Button
               type="button"
               variant="outline"
               size="lg"
               onClick={handleCancel}
+              disabled={isSaving}
             >
               Cancel
             </Button>
