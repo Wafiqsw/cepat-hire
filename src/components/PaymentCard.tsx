@@ -1,4 +1,3 @@
-import { Calendar, CreditCard } from 'lucide-react'
 import { useState } from 'react'
 import { Download, Eye, X, User, Calendar, CreditCard, FileText, DollarSign, Clock } from 'lucide-react'
 
@@ -63,8 +62,6 @@ const getStatusStyles = (status: PaymentStatus) => {
 
 export const PaymentCard = ({
   payment,
-  className = '',
-}: PaymentCardProps) => {
   onViewDetails,
   onDownloadReceipt,
   onApprovePayment,

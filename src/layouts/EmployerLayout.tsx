@@ -7,11 +7,10 @@ import {
   LayoutDashboard,
   Briefcase,
   Users,
-  FileText,
-  Settings,
   Menu,
   X,
   Wallet,
+  LogOut,
 } from 'lucide-react'
 
 interface EmployerLayoutProps {
@@ -20,15 +19,19 @@ interface EmployerLayoutProps {
 
 const employerNavItems = [
   { to: '/employer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/employer/jobs', label: 'My Job Posts', icon: Briefcase },
-  { to: '/employer/applicants', label: 'Applicants', icon: Users },
+  { to: '/employer/joblist', label: 'My Job Posts', icon: Briefcase },
+  { to: '/employer/applications', label: 'Applicants', icon: Users },
   { to: '/employer/payments', label: 'Payments', icon: Wallet },
-  { to: '/employer/reports', label: 'Reports', icon: FileText },
-  { to: '/employer/settings', label: 'Settings', icon: Settings },
 ]
 
 export const EmployerLayout = ({ children }: EmployerLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const handleLogout = () => {
+    // TODO: Implement actual logout logic (clear session, redirect to home, etc.)
+    console.log('Logging out...')
+    window.location.href = '/'
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#faf9f7' }}>
@@ -55,14 +58,14 @@ export const EmployerLayout = ({ children }: EmployerLayoutProps) => {
           `}
           style={{ backgroundColor: '#f8eee7' }}
         >
-          <div className="h-full overflow-y-auto border-r-2 pt-6 pb-20 lg:pb-6" style={{ borderColor: '#94618e' }}>
+          <div className="h-full overflow-y-auto border-r-2 pt-6 pb-20 lg:pb-6 flex flex-col" style={{ borderColor: '#94618e' }}>
             <div className="px-4 sm:px-6 mb-6">
               <h2 className="text-lg sm:text-xl font-bold" style={{ color: '#94618e' }}>
                 Employer Portal
               </h2>
             </div>
 
-            <nav className="space-y-1 px-3 sm:px-4">
+            <nav className="space-y-1 px-3 sm:px-4 flex-1">
               {employerNavItems.map((item) => {
                 const Icon = item.icon
                 return (
@@ -83,6 +86,22 @@ export const EmployerLayout = ({ children }: EmployerLayoutProps) => {
                 )
               })}
             </nav>
+
+            {/* Logout Button */}
+            <div className="px-3 sm:px-4 mt-4 border-t-2 pt-4" style={{ borderColor: '#94618e' }}>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 hover:scale-105"
+                style={{
+                  color: '#dc2626',
+                  backgroundColor: 'transparent',
+                  border: '2px solid #dc2626'
+                }}
+              >
+                <LogOut size={20} />
+                <span className="font-medium text-sm sm:text-base">Logout</span>
+              </button>
+            </div>
           </div>
         </aside>
 

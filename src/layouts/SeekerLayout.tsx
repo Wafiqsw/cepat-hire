@@ -8,10 +8,10 @@ import {
   Bookmark,
   FileText,
   User,
-  Settings,
   Menu,
   X,
   Wallet,
+  LogOut,
 } from 'lucide-react'
 
 interface SeekerLayoutProps {
@@ -25,11 +25,16 @@ const seekerNavItems = [
   { to: '/seeker/applications', label: 'My Applications', icon: FileText },
   { to: '/seeker/payments', label: 'My Earnings', icon: Wallet },
   { to: '/seeker/profile', label: 'Profile', icon: User },
-  { to: '/seeker/settings', label: 'Settings', icon: Settings },
 ]
 
 export const SeekerLayout = ({ children }: SeekerLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const handleLogout = () => {
+    // TODO: Implement actual logout logic (clear session, redirect to home, etc.)
+    console.log('Logging out...')
+    window.location.href = '/'
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#faf9f7' }}>
@@ -56,14 +61,14 @@ export const SeekerLayout = ({ children }: SeekerLayoutProps) => {
           `}
           style={{ backgroundColor: '#f8eee7' }}
         >
-          <div className="h-full overflow-y-auto border-r-2 pt-6 pb-20 lg:pb-6" style={{ borderColor: '#94618e' }}>
+          <div className="h-full overflow-y-auto border-r-2 pt-6 pb-20 lg:pb-6 flex flex-col" style={{ borderColor: '#94618e' }}>
             <div className="px-4 sm:px-6 mb-6">
               <h2 className="text-lg sm:text-xl font-bold" style={{ color: '#94618e' }}>
                 Job Seeker Portal
               </h2>
             </div>
 
-            <nav className="space-y-1 px-3 sm:px-4">
+            <nav className="space-y-1 px-3 sm:px-4 flex-1">
               {seekerNavItems.map((item) => {
                 const Icon = item.icon
                 return (
@@ -84,6 +89,22 @@ export const SeekerLayout = ({ children }: SeekerLayoutProps) => {
                 )
               })}
             </nav>
+
+            {/* Logout Button */}
+            <div className="px-3 sm:px-4 mt-4 border-t-2 pt-4" style={{ borderColor: '#94618e' }}>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 hover:scale-105"
+                style={{
+                  color: '#dc2626',
+                  backgroundColor: 'transparent',
+                  border: '2px solid #dc2626'
+                }}
+              >
+                <LogOut size={20} />
+                <span className="font-medium text-sm sm:text-base">Logout</span>
+              </button>
+            </div>
           </div>
         </aside>
 
