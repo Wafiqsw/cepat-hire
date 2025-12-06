@@ -9,6 +9,7 @@
  */
 
 import type * as applications from "../applications.js";
+import type * as auth from "../auth.js";
 import type * as candidates from "../candidates.js";
 import type * as conversations from "../conversations.js";
 import type * as jobs from "../jobs.js";
@@ -22,6 +23,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   applications: typeof applications;
+  auth: typeof auth;
   candidates: typeof candidates;
   conversations: typeof conversations;
   jobs: typeof jobs;

@@ -1,32 +1,42 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { Button, Input, Checkbox } from '../../components'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 
 export const Route = createFileRoute('/auth/login')({
   component: LoginPage,
 })
 
 function LoginPage() {
+  const navigate = useNavigate()
+  const { login, isAuthenticated, user, isLoading: authLoading } = useAuth()
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false,
   })
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // For now, both roles go to employer dashboard (seeker dashboard can be added later)
+      navigate({ to: '/employer/dashboard' })
+    }
+  }, [isAuthenticated, user, navigate])
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {}
 
-    // Email validation
     if (!formData.email) {
       newErrors.email = 'Email is required'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address'
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required'
     } else if (formData.password.length < 6) {
@@ -41,25 +51,32 @@ function LoginPage() {
     e.preventDefault()
 
     if (!validateForm()) {
-      console.log('❌ Login validation failed:', errors)
       return
     }
 
     setIsLoading(true)
+    setErrors({})
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('✅ LOGIN SUCCESSFUL!')
-      console.log('📧 Email:', formData.email)
-      console.log('🔒 Password:', formData.password)
-      console.log('💾 Remember Me:', formData.rememberMe)
-      console.log('📊 Full Form Data:', formData)
+    const result = await login(formData.email, formData.password)
 
+    if (!result.success) {
+      setErrors({ general: result.error || 'Login failed' })
       setIsLoading(false)
+    }
+    // Navigation happens automatically via useEffect when user is set
+  }
 
-      // You can redirect to dashboard here
-      // navigate({ to: '/employer/dashboard' }) or '/seeker/dashboard'
-    }, 1500)
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <AuthLayout>
+        <div className="flex items-center justify-center">
+          <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+            Loading...
+          </div>
+        </div>
+      </AuthLayout>
+    )
   }
 
   return (
@@ -75,6 +92,16 @@ function LoginPage() {
           </p>
         </div>
 
+        {/* Error Message */}
+        {errors.general && (
+          <div
+            className="mb-4 p-3 rounded-lg text-center"
+            style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}
+          >
+            {errors.general}
+          </div>
+        )}
+
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -84,7 +111,7 @@ function LoginPage() {
             value={formData.email}
             onChange={(e) => {
               setFormData({ ...formData, email: e.target.value })
-              setErrors({ ...errors, email: undefined })
+              setErrors({ ...errors, email: undefined, general: undefined })
             }}
             error={errors.email}
             fullWidth
@@ -97,7 +124,7 @@ function LoginPage() {
             value={formData.password}
             onChange={(e) => {
               setFormData({ ...formData, password: e.target.value })
-              setErrors({ ...errors, password: undefined })
+              setErrors({ ...errors, password: undefined, general: undefined })
             }}
             error={errors.password}
             fullWidth

@@ -1,20 +1,23 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { Button, Input, Checkbox, PasswordStrengthChecklist } from '../../components'
 import { AccountTypeModal } from '../../components/AccountTypeModal'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 
 export const Route = createFileRoute('/auth/register')({
   component: RegisterPage,
 })
 
 function RegisterPage() {
+  const navigate = useNavigate()
+  const { register, isAuthenticated, user, isLoading: authLoading } = useAuth()
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: '', // 'employer' or 'seeker'
     agreeToTerms: false,
   })
   const [errors, setErrors] = useState<{
@@ -22,30 +25,34 @@ function RegisterPage() {
     email?: string
     password?: string
     confirmPassword?: string
-    role?: string
     agreeToTerms?: string
+    general?: string
   }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showAccountTypeModal, setShowAccountTypeModal] = useState(false)
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate({ to: '/employer/dashboard' })
+    }
+  }, [isAuthenticated, user, navigate])
+
   const validateForm = () => {
     const newErrors: typeof errors = {}
 
-    // Full Name validation
     if (!formData.fullName) {
       newErrors.fullName = 'Full name is required'
     } else if (formData.fullName.length < 3) {
       newErrors.fullName = 'Full name must be at least 3 characters'
     }
 
-    // Email validation
     if (!formData.email) {
       newErrors.email = 'Email is required'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address'
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required'
     } else if (formData.password.length < 8) {
@@ -54,14 +61,12 @@ function RegisterPage() {
       newErrors.password = 'Password must contain uppercase, lowercase, and number'
     }
 
-    // Confirm Password validation
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password'
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match'
     }
 
-    // Terms validation
     if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = 'You must agree to the terms and conditions'
     }
@@ -74,7 +79,6 @@ function RegisterPage() {
     e.preventDefault()
 
     if (!validateForm()) {
-      console.log('❌ Registration validation failed:', errors)
       return
     }
 
@@ -82,31 +86,36 @@ function RegisterPage() {
     setShowAccountTypeModal(true)
   }
 
-  const handleAccountTypeSelect = (role: 'employer' | 'seeker') => {
-    setFormData({ ...formData, role })
+  const handleAccountTypeSelect = async (role: 'employer' | 'seeker') => {
     setIsLoading(true)
+    setErrors({})
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('✅ REGISTRATION SUCCESSFUL!')
-      console.log('👤 Full Name:', formData.fullName)
-      console.log('📧 Email:', formData.email)
-      console.log('🔒 Password:', formData.password)
-      console.log('👔 Account Type:', role === 'employer' ? 'Employer' : 'Job Seeker')
-      console.log('✔️ Agreed to Terms:', formData.agreeToTerms)
-      console.log('📊 Full Form Data:', {
-        fullName: formData.fullName,
-        email: formData.email,
-        role: role,
-        agreeToTerms: formData.agreeToTerms,
-      })
+    const result = await register(
+      formData.fullName,
+      formData.email,
+      formData.password,
+      role
+    )
 
+    if (!result.success) {
+      setErrors({ general: result.error || 'Registration failed' })
       setIsLoading(false)
+      setShowAccountTypeModal(false)
+    }
+    // Navigation happens automatically via useEffect when user is set
+  }
 
-      // You can redirect to dashboard here based on role
-      // if (role === 'employer') navigate({ to: '/employer/dashboard' })
-      // else navigate({ to: '/seeker/dashboard' })
-    }, 1500)
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <AuthLayout>
+        <div className="flex items-center justify-center">
+          <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+            Loading...
+          </div>
+        </div>
+      </AuthLayout>
+    )
   }
 
   return (
@@ -122,6 +131,16 @@ function RegisterPage() {
           </p>
         </div>
 
+        {/* Error Message */}
+        {errors.general && (
+          <div
+            className="mb-4 p-3 rounded-lg text-center"
+            style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}
+          >
+            {errors.general}
+          </div>
+        )}
+
         {/* Register Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -131,7 +150,7 @@ function RegisterPage() {
             value={formData.fullName}
             onChange={(e) => {
               setFormData({ ...formData, fullName: e.target.value })
-              setErrors({ ...errors, fullName: undefined })
+              setErrors({ ...errors, fullName: undefined, general: undefined })
             }}
             error={errors.fullName}
             fullWidth
@@ -144,7 +163,7 @@ function RegisterPage() {
             value={formData.email}
             onChange={(e) => {
               setFormData({ ...formData, email: e.target.value })
-              setErrors({ ...errors, email: undefined })
+              setErrors({ ...errors, email: undefined, general: undefined })
             }}
             error={errors.email}
             fullWidth
@@ -158,7 +177,7 @@ function RegisterPage() {
               value={formData.password}
               onChange={(e) => {
                 setFormData({ ...formData, password: e.target.value })
-                setErrors({ ...errors, password: undefined })
+                setErrors({ ...errors, password: undefined, general: undefined })
               }}
               error={errors.password}
               fullWidth
@@ -173,7 +192,7 @@ function RegisterPage() {
             value={formData.confirmPassword}
             onChange={(e) => {
               setFormData({ ...formData, confirmPassword: e.target.value })
-              setErrors({ ...errors, confirmPassword: undefined })
+              setErrors({ ...errors, confirmPassword: undefined, general: undefined })
             }}
             error={errors.confirmPassword}
             fullWidth
@@ -186,7 +205,7 @@ function RegisterPage() {
               checked={formData.agreeToTerms}
               onChange={(e) => {
                 setFormData({ ...formData, agreeToTerms: e.target.checked })
-                setErrors({ ...errors, agreeToTerms: undefined })
+                setErrors({ ...errors, agreeToTerms: undefined, general: undefined })
               }}
             />
             {errors.agreeToTerms && (
