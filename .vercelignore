@@ -1,0 +1,12 @@
+node_modules
+.env
+.env.local
+.DS_Store
+*.log
+.vinxi
+dist
+build
+.turbo
+coverage
+.cache
+convex/_generated
