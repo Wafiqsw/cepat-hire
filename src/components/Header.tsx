@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-
+import { Button } from './Button'
 import { useState } from 'react'
 import {
   ChevronDown,
@@ -16,7 +16,11 @@ import {
   X,
 } from 'lucide-react'
 
-export const Header = () => {
+interface HeaderProps {
+  showAuth?: boolean
+}
+
+export const Header = ({ showAuth = false }: HeaderProps) => {
   const [employerExpanded, setEmployerExpanded] = useState(false)
   const [seekerExpanded, setSeekerExpanded] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -41,6 +45,20 @@ export const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-2">
+            {showAuth && (
+              <div className="flex items-center gap-2 mr-2">
+                <Link to="/auth/login">
+                  <Button variant="ghost" size="md">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth/register">
+                  <Button variant="secondary" size="md">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
             <Link
               to="/"
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:opacity-80"
@@ -54,8 +72,8 @@ export const Header = () => {
               <span className="font-medium">Home</span>
             </Link>
 
-            {/* For Employers Dropdown */}
-            <div className="relative">
+            {/* For Employers Dropdown - Only show when logged in */}
+            {!showAuth && <div className="relative">
               <button
                 onClick={() => setEmployerExpanded(!employerExpanded)}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:opacity-80"
@@ -130,10 +148,10 @@ export const Header = () => {
                   </a>
                 </div>
               )}
-            </div>
+            </div>}
 
-            {/* For Job Seekers Dropdown */}
-            <div className="relative">
+            {/* For Job Seekers Dropdown - Only show when logged in */}
+            {!showAuth && <div className="relative">
               <button
                 onClick={() => setSeekerExpanded(!seekerExpanded)}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:opacity-80"
@@ -208,13 +226,27 @@ export const Header = () => {
                   </a>
                 </div>
               )}
-            </div>
+            </div>}
           </nav>
         </div>
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <nav className="lg:hidden mt-4 pb-4 space-y-2">
+            {showAuth && (
+              <div className="flex flex-col gap-2 mb-4">
+                <Link to="/auth/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" size="md" fullWidth>
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth/register" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="secondary" size="md" fullWidth>
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
             <Link
               to="/"
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
@@ -229,8 +261,8 @@ export const Header = () => {
               <span className="font-medium">Home</span>
             </Link>
 
-            {/* Mobile Employers Menu */}
-            <div>
+            {/* Mobile Employers Menu - Only show when logged in */}
+            {!showAuth && <div>
               <button
                 onClick={() => setEmployerExpanded(!employerExpanded)}
                 className="w-full flex items-center justify-between px-4 py-2 rounded-lg transition-all duration-200"
@@ -270,10 +302,10 @@ export const Header = () => {
                   </a>
                 </div>
               )}
-            </div>
+            </div>}
 
-            {/* Mobile Seekers Menu */}
-            <div>
+            {/* Mobile Seekers Menu - Only show when logged in */}
+            {!showAuth && <div>
               <button
                 onClick={() => setSeekerExpanded(!seekerExpanded)}
                 className="w-full flex items-center justify-between px-4 py-2 rounded-lg transition-all duration-200"
@@ -313,7 +345,7 @@ export const Header = () => {
                   </a>
                 </div>
               )}
-            </div>
+            </div>}
           </nav>
         )}
       </div>

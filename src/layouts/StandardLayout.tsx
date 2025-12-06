@@ -4,12 +4,13 @@ import { Footer } from '../components/Footer'
 
 interface StandardLayoutProps {
   children: ReactNode
+  showAuth?: boolean
 }
 
-export const StandardLayout = ({ children }: StandardLayoutProps) => {
+export const StandardLayout = ({ children, showAuth = false }: StandardLayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#faf9f7' }}>
-      <Header />
+      <Header showAuth={showAuth} />
       <main className="flex-1">
         {children}
       </main>
