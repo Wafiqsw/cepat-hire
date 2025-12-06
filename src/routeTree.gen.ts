@@ -20,6 +20,9 @@ import { Route as SeekerDashboardRouteImport } from './routes/seeker/dashboard'
 import { Route as SeekerBrowseJobsRouteImport } from './routes/seeker/browse-jobs'
 import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
+import { Route as EmployerJoblistRouteImport } from './routes/employer/joblist'
+import { Route as EmployerDashboardRouteImport } from './routes/employer/dashboard'
+import { Route as EmployerApplicationsRouteImport } from './routes/employer/applications'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
@@ -85,6 +88,21 @@ const EmployerPaymentsRoute = EmployerPaymentsRouteImport.update({
   path: '/employer/payments',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmployerJoblistRoute = EmployerJoblistRouteImport.update({
+  id: '/employer/joblist',
+  path: '/employer/joblist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerDashboardRoute = EmployerDashboardRouteImport.update({
+  id: '/employer/dashboard',
+  path: '/employer/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerApplicationsRoute = EmployerApplicationsRouteImport.update({
+  id: '/employer/applications',
+  path: '/employer/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/auth/register',
   path: '/auth/register',
@@ -137,6 +155,9 @@ export interface FileRoutesByFullPath {
   '/playground': typeof PlaygroundRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/browse-jobs': typeof SeekerBrowseJobsRoute
@@ -159,6 +180,9 @@ export interface FileRoutesByTo {
   '/playground': typeof PlaygroundRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/browse-jobs': typeof SeekerBrowseJobsRoute
@@ -182,6 +206,9 @@ export interface FileRoutesById {
   '/playground': typeof PlaygroundRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/browse-jobs': typeof SeekerBrowseJobsRoute
@@ -206,6 +233,9 @@ export interface FileRouteTypes {
     | '/playground'
     | '/auth/login'
     | '/auth/register'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/applications'
     | '/seeker/browse-jobs'
@@ -228,6 +258,9 @@ export interface FileRouteTypes {
     | '/playground'
     | '/auth/login'
     | '/auth/register'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/applications'
     | '/seeker/browse-jobs'
@@ -250,6 +283,9 @@ export interface FileRouteTypes {
     | '/playground'
     | '/auth/login'
     | '/auth/register'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/applications'
     | '/seeker/browse-jobs'
@@ -273,6 +309,9 @@ export interface RootRouteChildren {
   PlaygroundRoute: typeof PlaygroundRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  EmployerApplicationsRoute: typeof EmployerApplicationsRoute
+  EmployerDashboardRoute: typeof EmployerDashboardRoute
+  EmployerJoblistRoute: typeof EmployerJoblistRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
   SeekerApplicationsRoute: typeof SeekerApplicationsRoute
   SeekerBrowseJobsRoute: typeof SeekerBrowseJobsRoute
@@ -369,6 +408,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployerPaymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/employer/joblist': {
+      id: '/employer/joblist'
+      path: '/employer/joblist'
+      fullPath: '/employer/joblist'
+      preLoaderRoute: typeof EmployerJoblistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/dashboard': {
+      id: '/employer/dashboard'
+      path: '/employer/dashboard'
+      fullPath: '/employer/dashboard'
+      preLoaderRoute: typeof EmployerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/applications': {
+      id: '/employer/applications'
+      path: '/employer/applications'
+      fullPath: '/employer/applications'
+      preLoaderRoute: typeof EmployerApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/register': {
       id: '/auth/register'
       path: '/auth/register'
@@ -441,6 +501,9 @@ const rootRouteChildren: RootRouteChildren = {
   PlaygroundRoute: PlaygroundRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  EmployerApplicationsRoute: EmployerApplicationsRoute,
+  EmployerDashboardRoute: EmployerDashboardRoute,
+  EmployerJoblistRoute: EmployerJoblistRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,
   SeekerApplicationsRoute: SeekerApplicationsRoute,
   SeekerBrowseJobsRoute: SeekerBrowseJobsRoute,

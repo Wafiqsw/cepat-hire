@@ -175,9 +175,7 @@ Deploy to Cloudflare Workers:
 npm run deploy
 ```
 
-Make sure you have configured your `wrangler.jsonc` file with your Cloudflare account details.
-
-### Production Build
+# Building For Productions
 
 Build for production:
 
