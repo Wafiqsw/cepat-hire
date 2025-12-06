@@ -486,6 +486,526 @@ Current date: ${new Date().toLocaleDateString()}`,
   },
 });
 
+// ==================== SEEKER AI AGENT ====================
+
+const seekerTools = [
+  {
+    name: "search_jobs",
+    description: "Search for jobs based on criteria like title, location, job type, salary range",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        keyword: { type: "string", description: "Job title or keyword to search" },
+        location: { type: "string", description: "Location filter" },
+        jobType: { type: "string", description: "Job type (Part-time, Full-time, Contract, etc.)" },
+        minSalary: { type: "number", description: "Minimum salary/hour" },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "apply_to_job",
+    description: "Apply to a specific job by job ID",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        jobId: { type: "string", description: "The job ID to apply to" },
+      },
+      required: ["jobId"],
+    },
+  },
+  {
+    name: "auto_apply_matching_jobs",
+    description: "Automatically apply to all jobs matching the given criteria",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        keyword: { type: "string", description: "Job title or keyword to match" },
+        location: { type: "string", description: "Location filter" },
+        jobType: { type: "string", description: "Job type filter" },
+        maxApplications: { type: "number", description: "Maximum number of jobs to apply to (default 5)" },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "get_my_applications",
+    description: "Get list of jobs the seeker has applied to",
+    input_schema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "save_job",
+    description: "Save a job to favorites",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        jobId: { type: "string", description: "The job ID to save" },
+      },
+      required: ["jobId"],
+    },
+  },
+];
+
+export const _searchJobs = internalQuery({
+  args: {
+    keyword: v.optional(v.string()),
+    location: v.optional(v.string()),
+    jobType: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_status", (q) => q.eq("status", "open"))
+      .collect();
+
+    let filtered = jobs;
+
+    if (args.keyword) {
+      const keyword = args.keyword.toLowerCase();
+      filtered = filtered.filter(
+        (job) =>
+          job.title.toLowerCase().includes(keyword) ||
+          job.description.toLowerCase().includes(keyword) ||
+          job.company.toLowerCase().includes(keyword)
+      );
+    }
+
+    if (args.location) {
+      const location = args.location.toLowerCase();
+      filtered = filtered.filter((job) =>
+        job.location?.toLowerCase().includes(location)
+      );
+    }
+
+    if (args.jobType) {
+      const jobType = args.jobType.toLowerCase();
+      filtered = filtered.filter((job) =>
+        job.type?.toLowerCase().includes(jobType)
+      );
+    }
+
+    return filtered.map((job) => ({
+      id: job._id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      type: job.type,
+      salary: job.salary,
+      description: job.description?.substring(0, 100) + "...",
+    }));
+  },
+});
+
+export const _applyToJob = internalMutation({
+  args: {
+    candidateId: v.id("candidates"),
+    jobId: v.id("jobs"),
+  },
+  handler: async (ctx, args) => {
+    // Check if already applied
+    const existing = await ctx.db
+      .query("applications")
+      .withIndex("by_candidate", (q) => q.eq("candidateId", args.candidateId))
+      .filter((q) => q.eq(q.field("jobId"), args.jobId))
+      .first();
+
+    if (existing) {
+      return { success: false, message: "Already applied to this job" };
+    }
+
+    const job = await ctx.db.get(args.jobId);
+    if (!job) {
+      return { success: false, message: "Job not found" };
+    }
+
+    await ctx.db.insert("applications", {
+      candidateId: args.candidateId,
+      jobId: args.jobId,
+      status: "pending",
+      createdAt: Date.now(),
+    });
+
+    return { success: true, message: `Applied to ${job.title} at ${job.company}` };
+  },
+});
+
+export const _saveJobForSeeker = internalMutation({
+  args: {
+    candidateId: v.id("candidates"),
+    jobId: v.id("jobs"),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("savedJobs")
+      .withIndex("by_candidate_job", (q) =>
+        q.eq("candidateId", args.candidateId).eq("jobId", args.jobId)
+      )
+      .first();
+
+    if (existing) {
+      return { success: false, message: "Job already saved" };
+    }
+
+    const job = await ctx.db.get(args.jobId);
+    if (!job) {
+      return { success: false, message: "Job not found" };
+    }
+
+    await ctx.db.insert("savedJobs", {
+      candidateId: args.candidateId,
+      jobId: args.jobId,
+      savedAt: Date.now(),
+    });
+
+    return { success: true, message: `Saved ${job.title} to favorites` };
+  },
+});
+
+export const _getSeekerApplications = internalQuery({
+  args: { candidateId: v.id("candidates") },
+  handler: async (ctx, args) => {
+    const applications = await ctx.db
+      .query("applications")
+      .withIndex("by_candidate", (q) => q.eq("candidateId", args.candidateId))
+      .collect();
+
+    const enriched = await Promise.all(
+      applications.map(async (app) => {
+        const job = await ctx.db.get(app.jobId);
+        return {
+          id: app._id,
+          status: app.status,
+          appliedAt: app.createdAt,
+          jobTitle: job?.title || "Unknown",
+          company: job?.company || "Unknown",
+        };
+      })
+    );
+
+    return enriched;
+  },
+});
+
+// Seeker chat action
+export const seekerChat = action({
+  args: {
+    message: v.string(),
+    conversationId: v.string(),
+    candidateId: v.id("candidates"),
+    actionType: v.optional(v.union(v.literal("search"), v.literal("apply-selected"))),
+    selectedJobIds: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args): Promise<{
+    response: string;
+    appliedJobs?: string[];
+    matchingJobs?: Array<{
+      id: string;
+      title: string;
+      company: string;
+      location: string;
+      salary: string;
+      type: string;
+    }>;
+  }> => {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error("ANTHROPIC_API_KEY not configured");
+    }
+
+    // Save user message
+    await ctx.runMutation(internal.aiAgent._saveMessage, {
+      participantId: args.conversationId,
+      role: "user",
+      content: args.message,
+    });
+
+    // Get conversation history
+    const history: Array<{ role: string; content: string }> = await ctx.runQuery(
+      internal.aiAgent._getConversationHistory,
+      {
+        participantId: args.conversationId,
+        limit: 10,
+      }
+    );
+
+    const messages: ClaudeMessage[] = history.map((h) => ({
+      role: h.role as "user" | "assistant",
+      content: h.content,
+    }));
+
+    // Handle apply-selected action directly without AI
+    if (args.actionType === "apply-selected" && args.selectedJobIds && args.selectedJobIds.length > 0) {
+      const appliedJobs: string[] = [];
+      const results = [];
+
+      for (const jobId of args.selectedJobIds) {
+        try {
+          const result = await ctx.runMutation(internal.aiAgent._applyToJob, {
+            candidateId: args.candidateId,
+            jobId: jobId as any,
+          }) as { success: boolean; message: string };
+
+          if (result.success) {
+            appliedJobs.push(result.message.replace('Applied to ', ''));
+          }
+          results.push(result);
+        } catch (error) {
+          results.push({ success: false, message: String(error) });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      const response = successCount > 0
+        ? `Successfully applied to ${successCount} job(s):\n${appliedJobs.map(j => `• ${j}`).join('\n')}`
+        : 'No applications were submitted. You may have already applied to these jobs.';
+
+      return { response, appliedJobs };
+    }
+
+    // For search action, search jobs directly and return structured data
+    if (args.actionType === "search") {
+      // Extract meaningful keywords from the user's message
+      const message = args.message.toLowerCase();
+
+      // Check if it's a generic/broad query (wants all jobs)
+      const genericPhrases = ['any job', 'all job', 'find me a job', 'show me job', 'list job', 'what job', 'available job'];
+      const isGenericQuery = genericPhrases.some(phrase => message.includes(phrase)) || message.length < 10;
+
+      // Extract potential keywords (job titles, types, etc.)
+      const jobKeywords = ['waiter', 'waitress', 'cashier', 'barista', 'delivery', 'driver', 'tutor', 'sales', 'retail', 'server', 'cook', 'chef', 'cleaner', 'admin', 'assistant', 'part-time', 'full-time', 'remote'];
+      const locationKeywords = ['kuala lumpur', 'kl', 'petaling jaya', 'pj', 'subang', 'shah alam', 'penang', 'johor', 'selangor'];
+
+      let keyword: string | undefined;
+      let location: string | undefined;
+      let jobType: string | undefined;
+
+      // Only apply filters if not a generic query
+      if (!isGenericQuery) {
+        // Find job keyword
+        for (const kw of jobKeywords) {
+          if (message.includes(kw)) {
+            keyword = kw;
+            break;
+          }
+        }
+
+        // Find location
+        for (const loc of locationKeywords) {
+          if (message.includes(loc)) {
+            location = loc === 'kl' ? 'kuala lumpur' : loc === 'pj' ? 'petaling jaya' : loc;
+            break;
+          }
+        }
+
+        // Find job type
+        if (message.includes('part-time') || message.includes('part time')) {
+          jobType = 'part-time';
+        } else if (message.includes('full-time') || message.includes('full time')) {
+          jobType = 'full-time';
+        }
+      }
+
+      const jobs = await ctx.runQuery(internal.aiAgent._searchJobs, {
+        keyword,
+        location,
+        jobType,
+      }) as Array<{ id: string; title: string; company: string; location: string; salary: string; type: string }>;
+
+      const matchingJobs = jobs.map(job => ({
+        id: String(job.id),
+        title: job.title,
+        company: job.company,
+        location: job.location || 'Not specified',
+        salary: job.salary || 'Competitive',
+        type: job.type || 'Part-time',
+      }));
+
+      const response = matchingJobs.length > 0
+        ? `Found ${matchingJobs.length} job(s)${keyword ? ` matching "${keyword}"` : ''}. Select the ones you'd like to apply to.`
+        : 'No jobs found matching your criteria. Try a different search.';
+
+      return { response, matchingJobs };
+    }
+
+    // Default AI chat mode (for general queries)
+    const systemPrompt = `You are a helpful AI assistant for a job seeker using Cepat Hire.
+
+Your task:
+1. Search for jobs matching the user's description
+2. Present the matching jobs in a clear format
+
+Be helpful and informative. Current date: ${new Date().toLocaleDateString()}`;
+
+    let response: Response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages,
+        tools: seekerTools,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error("Claude API error:", error);
+      throw new Error(`Claude API error: ${response.status}`);
+    }
+
+    let result: ClaudeResponse = await response.json();
+    const appliedJobs: string[] = [];
+
+    // Handle tool calls
+    while (result.stop_reason === "tool_use") {
+      const toolUseBlocks = result.content.filter(
+        (block) => block.type === "tool_use"
+      );
+
+      const toolResults = [];
+
+      for (const toolUse of toolUseBlocks) {
+        let toolResult;
+        try {
+          toolResult = await executeSeekerTool(
+            ctx,
+            toolUse.name!,
+            toolUse.input || {},
+            args.candidateId
+          );
+
+          // Track applied jobs
+          if (toolUse.name === "apply_to_job" || toolUse.name === "auto_apply_matching_jobs") {
+            if ((toolResult as { appliedJobs?: string[] }).appliedJobs) {
+              appliedJobs.push(...(toolResult as { appliedJobs: string[] }).appliedJobs);
+            }
+          }
+        } catch (error) {
+          toolResult = { error: String(error) };
+        }
+
+        toolResults.push({
+          type: "tool_result",
+          tool_use_id: toolUse.id,
+          content: JSON.stringify(toolResult),
+        });
+      }
+
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: [
+            ...messages,
+            { role: "assistant", content: result.content },
+            { role: "user", content: toolResults },
+          ],
+          tools: seekerTools,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error("Claude API error:", error);
+        throw new Error(`Claude API error: ${response.status}`);
+      }
+
+      result = await response.json();
+    }
+
+    const textBlock = result.content.find((block) => block.type === "text");
+    const assistantMessage: string =
+      textBlock?.text || "I apologize, I couldn't generate a response.";
+
+    await ctx.runMutation(internal.aiAgent._saveMessage, {
+      participantId: args.conversationId,
+      role: "assistant",
+      content: assistantMessage,
+    });
+
+    return { response: assistantMessage, appliedJobs };
+  },
+});
+
+// Seeker tool execution helper
+async function executeSeekerTool(
+  ctx: { runQuery: Function; runMutation: Function },
+  toolName: string,
+  input: Record<string, unknown>,
+  candidateId: string
+): Promise<unknown> {
+  switch (toolName) {
+    case "search_jobs":
+      return await ctx.runQuery(internal.aiAgent._searchJobs, {
+        keyword: input.keyword as string | undefined,
+        location: input.location as string | undefined,
+        jobType: input.jobType as string | undefined,
+      });
+
+    case "apply_to_job":
+      return await ctx.runMutation(internal.aiAgent._applyToJob, {
+        candidateId,
+        jobId: input.jobId as string,
+      });
+
+    case "auto_apply_matching_jobs": {
+      const jobs = await ctx.runQuery(internal.aiAgent._searchJobs, {
+        keyword: input.keyword as string | undefined,
+        location: input.location as string | undefined,
+        jobType: input.jobType as string | undefined,
+      }) as Array<{ id: string; title: string; company: string }>;
+
+      const maxApps = (input.maxApplications as number) || 5;
+      const toApply = jobs.slice(0, maxApps);
+      const results = [];
+      const appliedJobs = [];
+
+      for (const job of toApply) {
+        const result = await ctx.runMutation(internal.aiAgent._applyToJob, {
+          candidateId,
+          jobId: job.id,
+        });
+        results.push({ job: job.title, company: job.company, ...result as object });
+        if ((result as { success: boolean }).success) {
+          appliedJobs.push(`${job.title} at ${job.company}`);
+        }
+      }
+
+      return { results, appliedJobs, totalMatching: jobs.length };
+    }
+
+    case "get_my_applications":
+      return await ctx.runQuery(internal.aiAgent._getSeekerApplications, {
+        candidateId,
+      });
+
+    case "save_job":
+      return await ctx.runMutation(internal.aiAgent._saveJobForSeeker, {
+        candidateId,
+        jobId: input.jobId as string,
+      });
+
+    default:
+      throw new Error(`Unknown seeker tool: ${toolName}`);
+  }
+}
+
 // Tool execution helper
 async function executeTool(
   ctx: { runQuery: Function; runMutation: Function },

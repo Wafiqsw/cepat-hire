@@ -1,70 +1,136 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
-import { useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 import { Bookmark, MapPin, DollarSign, Clock, X } from 'lucide-react'
 import { Button } from '../../components'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/saved-jobs')({
   component: SavedJobsPage,
 })
 
-interface SavedJob {
-  id: string
-  title: string
-  company: string
-  location: string
-  salary: string
-  jobType: string
-  postedDate: string
-  description: string
+function formatTimeAgo(timestamp: number): string {
+  const now = Date.now()
+  const diff = now - timestamp
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (days === 0) return 'Today'
+  if (days === 1) return '1 day ago'
+  if (days < 7) return `${days} days ago`
+  if (days < 14) return '1 week ago'
+  return `${Math.floor(days / 7)} weeks ago`
 }
 
 function SavedJobsPage() {
-  const [savedJobs, setSavedJobs] = useState<SavedJob[]>([
-    {
-      id: '1',
-      title: 'Delivery Rider',
-      company: 'GrabFood',
-      location: 'Kuala Lumpur',
-      salary: 'RM 15-20/hour',
-      jobType: 'Part-time',
-      postedDate: '2 days ago',
-      description: 'Deliver food orders around KL area. Flexible hours, good tips. Must have own motorcycle.',
-    },
-    {
-      id: '2',
-      title: 'Event Setup Crew',
-      company: 'Event Pro Malaysia',
-      location: 'Petaling Jaya',
-      salary: 'RM 200/day',
-      jobType: 'Temporary',
-      postedDate: '1 day ago',
-      description: 'Help set up stages, booths, and equipment for corporate events and exhibitions.',
-    },
-    {
-      id: '3',
-      title: 'Warehouse Assistant',
-      company: 'Shopee Logistics',
-      location: 'Shah Alam',
-      salary: 'RM 12/hour',
-      jobType: 'Part-time',
-      postedDate: '3 days ago',
-      description: 'Sort and pack items in warehouse. Morning or evening shifts available.',
-    },
-    {
-      id: '4',
-      title: 'Promoter',
-      company: 'Samsung Malaysia',
-      location: 'Mid Valley',
-      salary: 'RM 100/day',
-      jobType: 'Temporary',
-      postedDate: '5 days ago',
-      description: 'Promote Samsung products at shopping mall. Good communication skills needed.',
-    },
-  ])
+  const navigate = useNavigate()
+  const { user } = useAuth()
 
-  const handleUnsave = (jobId: string) => {
-    setSavedJobs(savedJobs.filter(job => job.id !== jobId))
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
+
+  // Fetch saved jobs from backend
+  const savedJobsData = useQuery(api.seeker.getSavedJobs,
+    candidateId ? { candidateId } : "skip"
+  )
+
+  // Mutations
+  const unsaveJob = useMutation(api.seeker.unsaveJob)
+  const applyToJob = useMutation(api.seeker.applyToJob)
+
+  // Transform data for display
+  const savedJobs = savedJobsData?.map((saved) => ({
+    id: saved._id,
+    jobId: saved.jobId,
+    title: saved.job?.title || 'Unknown Job',
+    company: saved.job?.company || 'Unknown Company',
+    location: saved.job?.location || 'Remote',
+    salary: saved.job?.salary || 'Competitive',
+    jobType: saved.job?.type || 'Part-time',
+    postedDate: saved.job?.createdAt
+      ? formatTimeAgo(saved.job.createdAt)
+      : 'Recently',
+    description: saved.job?.description || '',
+  })) || []
+
+  const handleUnsave = async (savedJobId: string, jobId: Id<"jobs">) => {
+    if (!candidateId) return
+    try {
+      await unsaveJob({ candidateId, jobId })
+    } catch (error) {
+      console.error('Failed to unsave job:', error)
+    }
+  }
+
+  const handleApply = async (jobId: Id<"jobs">) => {
+    if (!candidateId) {
+      alert('Please complete your profile before applying')
+      return
+    }
+    try {
+      await applyToJob({ candidateId, jobId })
+      // Optionally unsave after applying
+      await unsaveJob({ candidateId, jobId })
+      alert('Application submitted successfully!')
+    } catch (error) {
+      console.error('Failed to apply:', error)
+      alert('Failed to apply. You may have already applied to this job.')
+    }
+  }
+
+  // Loading state - check candidate profile first
+  if (candidate === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Candidate profile doesn't exist
+  if (candidate === null) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: '#94618e' }}>
+              Profile Not Found
+            </h2>
+            <p className="text-lg mb-6" style={{ color: '#94618e', opacity: 0.7 }}>
+              Please create your profile to save jobs.
+            </p>
+            <Button variant="primary" onClick={() => navigate({ to: '/seeker/browse-jobs' })}>
+              Browse Jobs
+            </Button>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Now candidateId is guaranteed to exist
+  if (savedJobsData === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
   }
 
   return (
@@ -94,7 +160,7 @@ function SavedJobsPage() {
               >
                 {/* Remove Button */}
                 <button
-                  onClick={() => handleUnsave(job.id)}
+                  onClick={() => handleUnsave(job.id, job.jobId)}
                   className="absolute top-4 right-4 p-2 rounded-full transition-all duration-200 hover:bg-red-50"
                   title="Remove from saved"
                 >
@@ -161,7 +227,7 @@ function SavedJobsPage() {
                         <Button
                           variant="primary"
                           size="sm"
-                          onClick={() => console.log('Apply to job:', job.id)}
+                          onClick={() => handleApply(job.jobId)}
                         >
                           Apply Now
                         </Button>
@@ -192,7 +258,7 @@ function SavedJobsPage() {
             </p>
             <Button
               variant="primary"
-              onClick={() => console.log('Browse jobs')}
+              onClick={() => navigate({ to: '/seeker/browse-jobs' })}
             >
               Browse Jobs
             </Button>

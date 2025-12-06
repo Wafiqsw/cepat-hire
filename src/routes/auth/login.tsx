@@ -20,11 +20,14 @@ function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated based on role
   useEffect(() => {
     if (isAuthenticated && user) {
-      // For now, both roles go to employer dashboard (seeker dashboard can be added later)
-      navigate({ to: '/employer/dashboard' })
+      if (user.role === 'seeker') {
+        navigate({ to: '/seeker/dashboard' })
+      } else {
+        navigate({ to: '/employer/dashboard' })
+      }
     }
   }, [isAuthenticated, user, navigate])
 

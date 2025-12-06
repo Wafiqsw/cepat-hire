@@ -8,13 +8,39 @@ export const list = query({
     ),
   },
   handler: async (ctx, args) => {
+    let jobs;
     if (args.status) {
-      return await ctx.db
+      jobs = await ctx.db
         .query("jobs")
         .withIndex("by_status", (q) => q.eq("status", args.status!))
         .collect();
+    } else {
+      jobs = await ctx.db.query("jobs").collect();
     }
-    return await ctx.db.query("jobs").collect();
+    // Only return jobs that have an employerId (valid employer-owned jobs)
+    // This ensures seekers only see jobs where the employer can actually view applications
+    return jobs.filter((job) => job.employerId !== undefined);
+  },
+});
+
+// List jobs for specific employer only
+export const listByEmployer = query({
+  args: {
+    employerId: v.id("users"),
+    status: v.optional(
+      v.union(v.literal("open"), v.literal("closed"), v.literal("draft"))
+    ),
+  },
+  handler: async (ctx, args) => {
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_employer", (q) => q.eq("employerId", args.employerId))
+      .collect();
+
+    if (args.status) {
+      return jobs.filter((job) => job.status === args.status);
+    }
+    return jobs;
   },
 });
 
@@ -27,6 +53,7 @@ export const get = query({
 
 export const create = mutation({
   args: {
+    employerId: v.optional(v.id("users")), // Link to employer who created the job
     title: v.string(),
     company: v.string(),
     description: v.string(),
@@ -89,10 +116,13 @@ export const search = query({
     query: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const jobs = await ctx.db
+    const allJobs = await ctx.db
       .query("jobs")
       .withIndex("by_status", (q) => q.eq("status", "open"))
       .collect();
+
+    // Only return jobs that have an employerId (valid employer-owned jobs)
+    const jobs = allJobs.filter((job) => job.employerId !== undefined);
 
     if (!args.skills?.length && !args.query) {
       return jobs;

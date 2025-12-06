@@ -1,8 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { PaymentCard, Modal, ModalActions, Button } from '../../components'
 import { Wallet, Clock, CheckCircle, AlertCircle, Filter, Building2 } from 'lucide-react'
 import { useState } from 'react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/payments')({
   component: SeekerPayments,
@@ -13,6 +17,25 @@ function SeekerPayments() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [accountNumber, setAccountNumber] = useState('')
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
+  const { user } = useAuth()
+
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
+
+  // Withdrawal mutation
+  const requestWithdrawal = useMutation(api.seeker.requestWithdrawal)
+
+  // Fetch payments and stats from backend
+  const paymentsData = useQuery(api.seeker.getMyPayments,
+    candidateId ? { candidateId } : "skip"
+  )
+  const paymentStats = useQuery(api.seeker.getMyPaymentStats,
+    candidateId ? { candidateId } : "skip"
+  )
 
   // Malaysian banks
   const malaysianBanks = [
@@ -24,75 +47,74 @@ function SeekerPayments() {
     { id: 'ambank', name: 'AmBank', color: '#ED1C24' },
   ]
 
-  // Sample payment data for gig work
-  const payments = [
-    {
-      id: '1',
-      amount: 150.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '05/12/2024',
-      description: 'Food Delivery - 8 orders completed',
-      paymentMethod: 'E-Wallet',
-      transactionId: 'TXN-2024-001234',
-    },
-    {
-      id: '2',
-      amount: 200.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: '04/12/2024',
-      description: 'Event Helper - Tech Expo Setup',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001235',
-    },
-    {
-      id: '3',
-      amount: 80.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '03/12/2024',
-      description: 'Moving Service - 1 day job',
-      paymentMethod: 'Cash',
-      transactionId: 'TXN-2024-001236',
-    },
-    {
-      id: '4',
-      amount: 120.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: '02/12/2024',
-      description: 'Warehouse Packing - Weekend shift',
-      paymentMethod: 'E-Wallet',
-      transactionId: 'TXN-2024-001237',
-    },
-    {
-      id: '5',
-      amount: 95.50,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '01/12/2024',
-      description: 'Delivery Rider - 6 orders',
-      paymentMethod: 'E-Wallet',
-      transactionId: 'TXN-2024-001238',
-    },
-  ]
+  // Transform payment data for display
+  const payments = paymentsData?.map((payment) => ({
+    id: payment._id,
+    amount: payment.amount,
+    currency: payment.currency,
+    status: payment.status as 'completed' | 'pending',
+    date: new Date(payment.createdAt).toLocaleDateString('en-GB'),
+    description: payment.description,
+    paymentMethod: payment.paymentMethod,
+    transactionId: payment.transactionId,
+  })) || []
 
   const filteredPayments = payments.filter(payment => {
     return statusFilter === 'all' || payment.status === statusFilter
   })
 
-  // Calculate wallet balances
-  const completedEarnings = payments
-    .filter(p => p.status === 'completed')
-    .reduce((sum, p) => sum + p.amount, 0)
+  // Use stats from backend
+  const totalBalance = paymentStats?.totalEarnings || 0
+  const pendingEarnings = paymentStats?.pendingEarnings || 0
+  const availableToWithdraw = paymentStats?.availableToWithdraw || 0
 
-  const pendingEarnings = payments
-    .filter(p => p.status === 'pending')
-    .reduce((sum, p) => sum + p.amount, 0)
+  // Loading state - check candidate profile first
+  if (candidate === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
 
-  const totalBalance = completedEarnings + pendingEarnings
-  const availableToWithdraw = completedEarnings * 0.95 // 95% available, 5% held for early withdrawal
+  // Candidate profile doesn't exist
+  if (candidate === null) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: '#94618e' }}>
+              Profile Not Found
+            </h2>
+            <p className="text-lg mb-6" style={{ color: '#94618e', opacity: 0.7 }}>
+              Please create your profile to view your wallet.
+            </p>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Now candidateId is guaranteed to exist
+  if (paymentsData === undefined || paymentStats === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
 
   return (
     <SeekerLayout>
@@ -349,18 +371,29 @@ function SeekerPayments() {
               </Button>
               <Button
                 variant="primary"
-                onClick={() => {
-                  if (selectedBank && accountNumber.length >= 10) {
-                    console.log('Withdraw to:', selectedBank, accountNumber)
-                    setShowWithdrawModal(false)
-                    setSelectedBank(null)
-                    setAccountNumber('')
-                    // Here you would call your withdrawal API
+                onClick={async () => {
+                  if (selectedBank && accountNumber.length >= 10 && candidateId && availableToWithdraw > 0) {
+                    setIsWithdrawing(true)
+                    try {
+                      await requestWithdrawal({
+                        candidateId,
+                        amount: availableToWithdraw,
+                        bankName: selectedBank,
+                        accountNumber,
+                      })
+                      setShowWithdrawModal(false)
+                      setSelectedBank(null)
+                      setAccountNumber('')
+                    } catch (error) {
+                      console.error('Withdrawal failed:', error)
+                    } finally {
+                      setIsWithdrawing(false)
+                    }
                   }
                 }}
-                disabled={!selectedBank || accountNumber.length < 10}
+                disabled={!selectedBank || accountNumber.length < 10 || isWithdrawing || !candidateId}
               >
-                Confirm Withdrawal
+                {isWithdrawing ? 'Processing...' : 'Confirm Withdrawal'}
               </Button>
             </ModalActions>
           </div>

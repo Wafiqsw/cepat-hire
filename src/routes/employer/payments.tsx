@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { PaymentCard } from '../../components'
 import { Filter, Download, Search } from 'lucide-react'
 import { useState } from 'react'
@@ -14,10 +15,15 @@ export const Route = createFileRoute('/employer/payments')({
 function EmployerPayments() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const { user } = useAuth()
 
-  // Fetch real data from Convex
-  const paymentsWithDetails = useQuery(api.payments.listWithDetails)
-  const stats = useQuery(api.payments.getStats)
+  // Fetch real data from Convex - filtered by employer
+  const paymentsWithDetails = useQuery(api.payments.listByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
+  const stats = useQuery(api.payments.getStatsByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
 
   // Mutations
   const updatePaymentStatus = useMutation(api.payments.updateStatus)

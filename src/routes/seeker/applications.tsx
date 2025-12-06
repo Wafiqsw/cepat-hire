@@ -1,7 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { useState } from 'react'
 import { Filter, Briefcase, MapPin, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/applications')({
   component: ApplicationsPage,
@@ -22,66 +26,33 @@ interface Application {
 }
 
 function ApplicationsPage() {
-  const [statusFilter, setStatusFilter] = useState<string>('pending')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const { user } = useAuth()
 
-  // Mock application data
-  const applications: Application[] = [
-    {
-      id: '1',
-      jobTitle: 'Delivery Rider',
-      company: 'FoodPanda',
-      location: 'Kuala Lumpur',
-      appliedDate: '05/12/2024',
-      status: 'accepted',
-      salary: 'RM 15-20/hour',
-      jobType: 'Part-time',
-      description: 'Deliver food orders around KL area. Flexible hours.',
-    },
-    {
-      id: '2',
-      jobTitle: 'Event Helper',
-      company: 'Event Masters',
-      location: 'Petaling Jaya',
-      appliedDate: '04/12/2024',
-      status: 'pending',
-      salary: 'RM 200/day',
-      jobType: 'Temporary',
-      description: 'Help set up booths and equipment for weekend events.',
-    },
-    {
-      id: '3',
-      jobTitle: 'Warehouse Packer',
-      company: 'Logistics Hub',
-      location: 'Shah Alam',
-      appliedDate: '03/12/2024',
-      status: 'rejected',
-      salary: 'RM 10/hour',
-      jobType: 'Part-time',
-      description: 'Pack and sort items in warehouse. Weekend shifts available.',
-    },
-    {
-      id: '4',
-      jobTitle: 'Promoter',
-      company: 'Retail Solutions',
-      location: 'Mid Valley',
-      appliedDate: '02/12/2024',
-      status: 'interviewing',
-      salary: 'RM 80/day',
-      jobType: 'Temporary',
-      description: 'Promote products at shopping mall. Good communication skills needed.',
-    },
-    {
-      id: '5',
-      jobTitle: 'Cleaner',
-      company: 'Clean Pro Services',
-      location: 'Subang Jaya',
-      appliedDate: '01/12/2024',
-      status: 'pending',
-      salary: 'RM 12/hour',
-      jobType: 'Part-time',
-      description: 'Office cleaning services. Morning or evening shifts.',
-    },
-  ]
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
+
+  const applicationsData = useQuery(api.seeker.getMyApplications,
+    candidateId ? { candidateId } : "skip"
+  )
+
+  // Transform applications for display
+  const applications: Application[] = applicationsData?.map((app) => ({
+    id: app._id,
+    jobTitle: app.job?.title || 'Unknown Job',
+    company: app.job?.company || 'Unknown Company',
+    location: app.job?.location || 'Remote',
+    appliedDate: new Date(app.createdAt).toLocaleDateString('en-GB'),
+    status: (app.status === 'shortlisted' ? 'accepted' :
+             app.status === 'reviewed' ? 'interviewing' :
+             app.status) as ApplicationStatus,
+    salary: app.job?.salary || 'Competitive',
+    jobType: app.job?.type || 'Part-time',
+    description: app.job?.description || '',
+  })) || []
 
   const filteredApplications = applications.filter(app => {
     return statusFilter === 'all' || app.status === statusFilter

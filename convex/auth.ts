@@ -62,6 +62,18 @@ export const register = mutation({
       createdAt: Date.now(),
     });
 
+    // If seeker, also create a candidate profile linked to this user
+    if (args.role === "seeker") {
+      await ctx.db.insert("candidates", {
+        userId,
+        name: args.name,
+        email: args.email.toLowerCase(),
+        skills: [],
+        status: "new",
+        createdAt: Date.now(),
+      });
+    }
+
     // Create session
     const token = generateRandomString(64);
     const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days

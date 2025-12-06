@@ -1,7 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useQuery, useMutation, useAction } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { Search, MapPin, Building2, DollarSign, Clock, Calendar, Briefcase, Heart, Share2 } from 'lucide-react'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
+import { useAuth } from '../../contexts/AuthContext'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 import { JobCard } from '../../components/JobCard'
 import { Modal } from '../../components/Modal'
@@ -10,88 +14,18 @@ export const Route = createFileRoute('/seeker/browse-jobs')({
   component: RouteComponent,
 })
 
-const mockJobs = [
-  {
-    id: '1',
-    title: 'Waiter/Waitress',
-    company: 'Cafe Delight',
-    location: 'Kuala Lumpur, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 8 - 12/hour',
-    postedDate: '2 days ago',
-    description: 'Looking for friendly waiters/waitresses for evening shifts at our busy cafe.',
-  },
-  {
-    id: '2',
-    title: 'Retail Sales Assistant',
-    company: 'Fashion Hub',
-    location: 'Penang, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 1,500 - 2,000',
-    postedDate: '1 week ago',
-    description: 'Join our team to assist customers and manage store operations on weekends.',
-  },
-  {
-    id: '3',
-    title: 'Delivery Rider',
-    company: 'QuickFood Delivery',
-    location: 'Johor Bahru, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 10 - 15/hour',
-    postedDate: '3 days ago',
-    description: 'Flexible hours delivering food to customers. Own motorcycle required.',
-  },
-  {
-    id: '4',
-    title: 'Tutor',
-    company: 'Smart Learning Center',
-    location: 'Selangor, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 30 - 50/hour',
-    postedDate: '5 days ago',
-    description: 'Teach students in various subjects. Math and Science tutors needed.',
-  },
-  {
-    id: '5',
-    title: 'Cashier',
-    company: 'Supermart Express',
-    location: 'Kuala Lumpur, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 1,800 - 2,200',
-    postedDate: '1 day ago',
-    description: 'Handle cash transactions and provide excellent customer service.',
-  },
-  {
-    id: '6',
-    title: 'Barista',
-    company: 'Coffee Corner',
-    location: 'Penang, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 9 - 13/hour',
-    postedDate: '4 days ago',
-    description: 'Make and serve coffee beverages. Experience with espresso machines preferred.',
-  },
-  {
-    id: '7',
-    title: 'Event Staff',
-    company: 'EventPro Management',
-    location: 'Selangor, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 100 - 150/day',
-    postedDate: '2 days ago',
-    description: 'Help with event setup, registration, and crowd management on weekends.',
-  },
-  {
-    id: '8',
-    title: 'Pet Sitter',
-    company: 'Paws & Claws Care',
-    location: 'Kuala Lumpur, Malaysia',
-    type: 'Part-time',
-    salary: 'RM 25 - 40/visit',
-    postedDate: '6 days ago',
-    description: 'Care for pets while owners are away. Must love animals.',
-  },
-]
+// Helper to format relative time
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now()
+  const diff = now - timestamp
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (days === 0) return 'Today'
+  if (days === 1) return '1 day ago'
+  if (days < 7) return `${days} days ago`
+  if (days < 14) return '1 week ago'
+  return `${Math.floor(days / 7)} weeks ago`
+}
 
 // Extended job details data
 const jobDetailsData: Record<string, any> = {
@@ -325,17 +259,69 @@ function RouteComponent() {
   const [showApplyModal, setShowApplyModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [aiJobPrompt, setAiJobPrompt] = useState('')
-  const [aiActionType, setAiActionType] = useState<'auto-apply' | 'list-jobs'>('list-jobs')
-  const [aiPromptSubmitted, setAiPromptSubmitted] = useState(false)
+  const [aiStep, setAiStep] = useState<'prompt' | 'results'>('prompt')
+  const [aiMatchingJobs, setAiMatchingJobs] = useState<Array<{
+    id: string;
+    title: string;
+    company: string;
+    location: string;
+    salary: string;
+    type: string;
+  }>>([])
+  const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
+  const [aiResponse, setAiResponse] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const { user } = useAuth()
 
-  const handleApply = (jobId: string) => {
-    console.log('Applied to job:', jobId)
-    // TODO: Implement actual apply logic
+  // Fetch real data from Convex
+  const jobs = useQuery(api.jobs.list, { status: 'open' })
+
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
+
+  // Mutations
+  const applyToJob = useMutation(api.seeker.applyToJob)
+  const saveJob = useMutation(api.seeker.saveJob)
+  const seekerChat = useAction(api.aiAgent.seekerChat)
+
+  // Transform jobs for display
+  const jobsForDisplay = jobs?.map((job) => ({
+    id: job._id,
+    title: job.title,
+    company: job.company,
+    location: job.location || 'Remote',
+    type: job.type || 'Part-time',
+    salary: job.salary || 'Competitive',
+    postedDate: formatRelativeTime(job.createdAt),
+    description: job.description,
+    image: job.image,
+  })) || []
+
+  const handleApply = async (jobId: string): Promise<boolean> => {
+    if (!candidateId) {
+      alert('Please complete your profile before applying')
+      return false
+    }
+    try {
+      await applyToJob({ candidateId, jobId: jobId as Id<'jobs'> })
+      return true
+    } catch (error) {
+      console.error('Failed to apply:', error)
+      alert('Failed to apply. You may have already applied to this job.')
+      return false
+    }
   }
 
-  const handleSave = (jobId: string) => {
-    console.log('Saved job:', jobId)
-    // TODO: Implement actual save logic
+  const handleSave = async (jobId: string) => {
+    if (!candidateId) return
+    try {
+      await saveJob({ candidateId, jobId: jobId as Id<'jobs'> })
+    } catch (error) {
+      console.error('Failed to save:', error)
+    }
   }
 
   const handleViewDetails = (jobId: string) => {
@@ -348,19 +334,77 @@ function RouteComponent() {
     setSelectedJobId(null)
   }
 
-  const handleAiPromptSubmit = () => {
-    if (aiJobPrompt.trim()) {
-      setAiPromptSubmitted(true)
-      console.log('AI Prompt:', aiJobPrompt)
-      console.log('Action Type:', aiActionType)
-      // TODO: Implement AI logic based on actionType
-      if (aiActionType === 'auto-apply') {
-        console.log('AI will auto-apply to matching jobs')
-      } else {
-        console.log('AI will list matching jobs')
+  // Step 1: Search for matching jobs
+  const handleAiSearch = async () => {
+    if (!aiJobPrompt.trim() || !candidateId) return
+
+    setAiLoading(true)
+    setAiResponse(null)
+    setAiMatchingJobs([])
+    setSelectedJobIds([])
+
+    try {
+      const result = await seekerChat({
+        message: aiJobPrompt,
+        conversationId: `seeker-${candidateId}`,
+        candidateId,
+        actionType: 'search',
+      })
+      setAiResponse(result.response)
+      if (result.matchingJobs && result.matchingJobs.length > 0) {
+        setAiMatchingJobs(result.matchingJobs)
+        setAiStep('results')
       }
-      setTimeout(() => setAiPromptSubmitted(false), 5000) // Hide message after 5 seconds
+    } catch (error) {
+      console.error('AI error:', error)
+      setAiResponse('Sorry, there was an error processing your request. Please try again.')
+    } finally {
+      setAiLoading(false)
     }
+  }
+
+  // Step 2: Apply to selected jobs
+  const handleAiApply = async () => {
+    if (selectedJobIds.length === 0 || !candidateId) return
+
+    setAiLoading(true)
+    setAiResponse(null)
+
+    try {
+      const result = await seekerChat({
+        message: aiJobPrompt,
+        conversationId: `seeker-${candidateId}`,
+        candidateId,
+        actionType: 'apply-selected',
+        selectedJobIds,
+      })
+      setAiResponse(result.response)
+      // Clear selections after applying
+      setSelectedJobIds([])
+    } catch (error) {
+      console.error('AI error:', error)
+      setAiResponse('Sorry, there was an error applying to jobs. Please try again.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  // Reset to search step
+  const handleAiReset = () => {
+    setAiStep('prompt')
+    setAiJobPrompt('')
+    setAiMatchingJobs([])
+    setSelectedJobIds([])
+    setAiResponse(null)
+  }
+
+  // Toggle job selection
+  const handleJobSelect = (jobId: string) => {
+    setSelectedJobIds(prev =>
+      prev.includes(jobId)
+        ? prev.filter(id => id !== jobId)
+        : [...prev, jobId]
+    )
   }
 
   const handleFilterToggle = (
@@ -390,7 +434,7 @@ function RouteComponent() {
   }
 
   // Filter jobs based on selected criteria
-  const filteredJobs = mockJobs.filter((job) => {
+  const filteredJobs = jobsForDisplay.filter((job) => {
     const matchesSearch = searchKeyword === '' ||
       job.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
       job.company.toLowerCase().includes(searchKeyword.toLowerCase()) ||
@@ -404,6 +448,21 @@ function RouteComponent() {
 
     return matchesSearch && matchesJobType && matchesLocation
   })
+
+  // Loading state
+  if (jobs === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading jobs...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
 
   return (
     <SeekerLayout>
@@ -442,79 +501,143 @@ function RouteComponent() {
               </div>
             </div>
 
-            {/* AI Auto-Apply Section */}
+            {/* AI Job Assistant Section */}
             <div className="mb-6 p-6 rounded-xl border-2" style={{ backgroundColor: '#ffffff', borderColor: '#94618e' }}>
               <h2 className="text-lg font-bold mb-3" style={{ color: '#94618e' }}>
                 🤖 AI Job Assistant
               </h2>
-              <p className="text-sm mb-4" style={{ color: '#94618e', opacity: 0.6 }}>
-                Describe the job you're looking for and let AI help you
-              </p>
 
-              <div className="space-y-3">
-                <textarea
-                  placeholder="Describe your ideal job... (e.g., 'I'm looking for a part-time waiter job in Kuala Lumpur with flexible hours, preferably near an LRT station. I have experience in customer service and want something that pays at least RM10/hour.')"
-                  value={aiJobPrompt}
-                  onChange={(e) => setAiJobPrompt(e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-lg border-2 font-medium text-sm transition-all duration-200 outline-none focus:ring-2 focus:ring-offset-2 resize-none"
-                  style={{
-                    backgroundColor: '#f8eee7',
-                    color: '#94618e',
-                    borderColor: '#94618e',
-                  }}
-                />
-
+              {/* Step 1: Search Prompt */}
+              {aiStep === 'prompt' && (
                 <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-2" style={{ color: '#94618e' }}>
-                      What should AI do?
-                    </label>
-                    <div className="inline-flex rounded-full p-1 w-full sm:w-auto" style={{ backgroundColor: '#f8eee7' }}>
-                      <button
-                        onClick={() => setAiActionType('list-jobs')}
-                        className="flex-1 sm:flex-initial px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-200"
-                        style={{
-                          backgroundColor: aiActionType === 'list-jobs' ? '#94618e' : 'transparent',
-                          color: aiActionType === 'list-jobs' ? '#f8eee7' : '#94618e',
-                        }}
-                      >
-                        📋 List Jobs
-                      </button>
-                      <button
-                        onClick={() => setAiActionType('auto-apply')}
-                        className="flex-1 sm:flex-initial px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-200"
-                        style={{
-                          backgroundColor: aiActionType === 'auto-apply' ? '#94618e' : 'transparent',
-                          color: aiActionType === 'auto-apply' ? '#f8eee7' : '#94618e',
-                        }}
-                      >
-                        ⚡ Auto Apply
-                      </button>
-                    </div>
-                  </div>
-
+                  <p className="text-sm mb-4" style={{ color: '#94618e', opacity: 0.6 }}>
+                    Describe the job you're looking for and AI will find matching jobs
+                  </p>
+                  <textarea
+                    placeholder="Describe your ideal job... (e.g., 'I'm looking for a part-time waiter job in Kuala Lumpur with flexible hours, preferably near an LRT station.')"
+                    value={aiJobPrompt}
+                    onChange={(e) => setAiJobPrompt(e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-lg border-2 font-medium text-sm transition-all duration-200 outline-none focus:ring-2 focus:ring-offset-2 resize-none"
+                    style={{
+                      backgroundColor: '#f8eee7',
+                      color: '#94618e',
+                      borderColor: '#94618e',
+                    }}
+                  />
                   <button
-                    onClick={handleAiPromptSubmit}
-                    disabled={!aiJobPrompt.trim()}
+                    onClick={handleAiSearch}
+                    disabled={!aiJobPrompt.trim() || aiLoading}
                     className="w-full px-6 py-3 rounded-full font-bold text-sm transition-all hover:opacity-90 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     style={{
                       backgroundColor: '#94618e',
                       color: '#f8eee7',
                     }}
                   >
-                    Submit to AI 🚀
+                    {aiLoading ? 'Searching...' : '🔍 Find Matching Jobs'}
                   </button>
                 </div>
+              )}
 
-                {aiPromptSubmitted && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg animate-fade-in" style={{ backgroundColor: '#dcfce7' }}>
-                    <span className="text-sm font-medium" style={{ color: '#16a34a' }}>
-                      ✓ AI has received your prompt! {aiActionType === 'auto-apply' ? 'Auto-applying to matching jobs...' : 'Finding matching jobs...'}
-                    </span>
+              {/* Step 2: Results with Selection */}
+              {aiStep === 'results' && (
+                <div className="space-y-3">
+                  <p className="text-sm mb-2" style={{ color: '#94618e', opacity: 0.6 }}>
+                    Select jobs you want to apply to:
+                  </p>
+
+                  {/* Job List with Checkboxes */}
+                  <div className="max-h-64 overflow-y-auto space-y-2 border rounded-lg p-2" style={{ borderColor: '#e5e7eb' }}>
+                    {aiMatchingJobs.map((job) => (
+                      <label
+                        key={job.id}
+                        className="flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all hover:bg-opacity-50"
+                        style={{
+                          backgroundColor: selectedJobIds.includes(job.id) ? '#f8eee7' : '#ffffff',
+                          border: selectedJobIds.includes(job.id) ? '2px solid #94618e' : '2px solid #e5e7eb',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedJobIds.includes(job.id)}
+                          onChange={() => handleJobSelect(job.id)}
+                          className="mt-1 w-4 h-4 rounded"
+                          style={{ accentColor: '#94618e' }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate" style={{ color: '#94618e' }}>
+                            {job.title}
+                          </p>
+                          <p className="text-xs truncate" style={{ color: '#94618e', opacity: 0.7 }}>
+                            {job.company}
+                          </p>
+                          <div className="flex flex-wrap gap-2 mt-1 text-xs" style={{ color: '#94618e', opacity: 0.6 }}>
+                            <span>📍 {job.location}</span>
+                            <span>💰 {job.salary}</span>
+                            <span>📋 {job.type}</span>
+                          </div>
+                        </div>
+                      </label>
+                    ))}
                   </div>
-                )}
-              </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleAiReset}
+                      className="flex-1 px-4 py-2.5 rounded-full font-semibold text-sm transition-all hover:opacity-90 border-2"
+                      style={{
+                        backgroundColor: 'transparent',
+                        color: '#94618e',
+                        borderColor: '#94618e',
+                      }}
+                    >
+                      ↩️ Search Again
+                    </button>
+                    <button
+                      onClick={handleAiApply}
+                      disabled={selectedJobIds.length === 0 || aiLoading}
+                      className="flex-1 px-4 py-2.5 rounded-full font-bold text-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        backgroundColor: '#94618e',
+                        color: '#f8eee7',
+                      }}
+                    >
+                      {aiLoading ? 'Applying...' : `⚡ Apply to Selected (${selectedJobIds.length})`}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Loading State */}
+              {aiLoading && (
+                <div className="flex items-center gap-2 p-3 rounded-lg animate-pulse mt-3" style={{ backgroundColor: '#fef3c7' }}>
+                  <span className="text-sm font-medium" style={{ color: '#d97706' }}>
+                    {aiStep === 'prompt' ? 'Finding matching jobs...' : 'Applying to selected jobs...'}
+                  </span>
+                </div>
+              )}
+
+              {/* Response Message */}
+              {aiResponse && !aiLoading && (
+                <div className="p-4 rounded-lg mt-3" style={{ backgroundColor: '#dcfce7', border: '1px solid #16a34a' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: '#16a34a' }}>
+                    AI Response:
+                  </p>
+                  <p className="text-sm whitespace-pre-wrap" style={{ color: '#15803d' }}>
+                    {aiResponse}
+                  </p>
+                  {aiStep === 'results' && aiMatchingJobs.length === 0 && (
+                    <button
+                      onClick={handleAiReset}
+                      className="mt-3 text-xs underline"
+                      style={{ color: '#16a34a' }}
+                    >
+                      Try a different search
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Job Cards Grid */}
@@ -556,8 +679,8 @@ function RouteComponent() {
           showCloseButton={true}
         >
           {selectedJobId && (() => {
-            const job = mockJobs.find(j => j.id === selectedJobId)
-            const details = jobDetailsData[selectedJobId]
+            const job = jobsForDisplay.find(j => j.id === selectedJobId)
+            const details = jobDetailsData[selectedJobId] || {}
 
             if (!job) return null
 
@@ -757,7 +880,7 @@ function RouteComponent() {
 
         {/* Apply Confirmation Modal */}
         {selectedJobId && (() => {
-          const job = mockJobs.find(j => j.id === selectedJobId)
+          const job = jobsForDisplay.find(j => j.id === selectedJobId)
           if (!job) return null
 
           return (
@@ -784,10 +907,12 @@ function RouteComponent() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    handleApply(selectedJobId)
+                  onClick={async () => {
+                    const success = await handleApply(selectedJobId)
                     setShowApplyModal(false)
-                    setShowSuccessModal(true)
+                    if (success) {
+                      setShowSuccessModal(true)
+                    }
                   }}
                   className="px-6 py-2.5 rounded-full font-bold text-base transition-all hover:opacity-90"
                   style={{
@@ -804,7 +929,7 @@ function RouteComponent() {
 
         {/* Success Modal */}
         {selectedJobId && (() => {
-          const job = mockJobs.find(j => j.id === selectedJobId)
+          const job = jobsForDisplay.find(j => j.id === selectedJobId)
           if (!job) return null
 
           return (

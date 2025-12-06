@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { FloatingChatButton } from '../components/AIChat'
+import { useAuth } from '../contexts/AuthContext'
 import {
   LayoutDashboard,
   Briefcase,
@@ -26,10 +27,10 @@ const employerNavItems = [
 
 export const EmployerLayout = ({ children }: EmployerLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { logout } = useAuth()
 
-  const handleLogout = () => {
-    // TODO: Implement actual logout logic (clear session, redirect to home, etc.)
-    console.log('Logging out...')
+  const handleLogout = async () => {
+    await logout()
     window.location.href = '/'
   }
 
