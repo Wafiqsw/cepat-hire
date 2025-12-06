@@ -9,7 +9,7 @@ npm install
 npm run start
 ```
 
-# Building For Production
+# Building For Productions
 
 To build this application for production:
 

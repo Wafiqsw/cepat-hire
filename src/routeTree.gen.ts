@@ -9,8 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
+import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
+import { Route as EmployerJoblistRouteImport } from './routes/employer/joblist'
+import { Route as EmployerDashboardRouteImport } from './routes/employer/dashboard'
+import { Route as EmployerApplicationsRouteImport } from './routes/employer/applications'
+import { Route as AuthRegisterRouteImport } from './routes/auth/register'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
@@ -19,6 +27,11 @@ import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
 import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only'
 
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: '/playground',
+  path: '/playground',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -27,6 +40,41 @@ const HomeRoute = HomeRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerPaymentsRoute = SeekerPaymentsRouteImport.update({
+  id: '/seeker/payments',
+  path: '/seeker/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerPaymentsRoute = EmployerPaymentsRouteImport.update({
+  id: '/employer/payments',
+  path: '/employer/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerJoblistRoute = EmployerJoblistRouteImport.update({
+  id: '/employer/joblist',
+  path: '/employer/joblist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerDashboardRoute = EmployerDashboardRouteImport.update({
+  id: '/employer/dashboard',
+  path: '/employer/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerApplicationsRoute = EmployerApplicationsRouteImport.update({
+  id: '/employer/applications',
+  path: '/employer/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
@@ -68,6 +116,14 @@ const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
+  '/playground': typeof PlaygroundRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
+  '/employer/payments': typeof EmployerPaymentsRoute
+  '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -79,6 +135,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
+  '/playground': typeof PlaygroundRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
+  '/employer/payments': typeof EmployerPaymentsRoute
+  '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -91,6 +155,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
+  '/playground': typeof PlaygroundRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
+  '/employer/payments': typeof EmployerPaymentsRoute
+  '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -104,6 +176,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/home'
+    | '/playground'
+    | '/auth/login'
+    | '/auth/register'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
+    | '/employer/payments'
+    | '/seeker/payments'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -115,6 +195,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/home'
+    | '/playground'
+    | '/auth/login'
+    | '/auth/register'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
+    | '/employer/payments'
+    | '/seeker/payments'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -126,6 +214,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/home'
+    | '/playground'
+    | '/auth/login'
+    | '/auth/register'
+    | '/employer/applications'
+    | '/employer/dashboard'
+    | '/employer/joblist'
+    | '/employer/payments'
+    | '/seeker/payments'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -138,6 +234,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRoute
+  PlaygroundRoute: typeof PlaygroundRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+  EmployerApplicationsRoute: typeof EmployerApplicationsRoute
+  EmployerDashboardRoute: typeof EmployerDashboardRoute
+  EmployerJoblistRoute: typeof EmployerJoblistRoute
+  EmployerPaymentsRoute: typeof EmployerPaymentsRoute
+  SeekerPaymentsRoute: typeof SeekerPaymentsRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
@@ -149,6 +253,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/playground': {
+      id: '/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof PlaygroundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home': {
       id: '/home'
       path: '/home'
@@ -161,6 +272,55 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/payments': {
+      id: '/seeker/payments'
+      path: '/seeker/payments'
+      fullPath: '/seeker/payments'
+      preLoaderRoute: typeof SeekerPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/payments': {
+      id: '/employer/payments'
+      path: '/employer/payments'
+      fullPath: '/employer/payments'
+      preLoaderRoute: typeof EmployerPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/joblist': {
+      id: '/employer/joblist'
+      path: '/employer/joblist'
+      fullPath: '/employer/joblist'
+      preLoaderRoute: typeof EmployerJoblistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/dashboard': {
+      id: '/employer/dashboard'
+      path: '/employer/dashboard'
+      fullPath: '/employer/dashboard'
+      preLoaderRoute: typeof EmployerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/applications': {
+      id: '/employer/applications'
+      path: '/employer/applications'
+      fullPath: '/employer/applications'
+      preLoaderRoute: typeof EmployerApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/start/server-funcs': {
@@ -218,6 +378,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRoute,
+  PlaygroundRoute: PlaygroundRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
+  EmployerApplicationsRoute: EmployerApplicationsRoute,
+  EmployerDashboardRoute: EmployerDashboardRoute,
+  EmployerJoblistRoute: EmployerJoblistRoute,
+  EmployerPaymentsRoute: EmployerPaymentsRoute,
+  SeekerPaymentsRoute: SeekerPaymentsRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
