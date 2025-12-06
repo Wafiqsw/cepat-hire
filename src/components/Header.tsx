@@ -26,7 +26,14 @@ export const Header = ({ showAuth = false }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <header className="shadow-lg" style={{ backgroundColor: '#94618e' }}>
+    <header
+      className="shadow-lg"
+      style={{
+        backgroundColor: '#94618e',
+        borderBottom: '3px solid rgba(122, 79, 115, 0.5)',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+      }}
+    >
       <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-xl sm:text-2xl font-bold tracking-wide" style={{ color: '#f8eee7' }}>

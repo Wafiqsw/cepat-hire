@@ -29,54 +29,57 @@ const seekerNavItems = [
 ]
 
 export const SeekerLayout = ({ children }: SeekerLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true) // Default to open on desktop
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#faf9f7' }}>
       <Header />
 
       <div className="flex-1 flex">
-        {/* Mobile Sidebar Toggle */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-          style={{ backgroundColor: '#94618e', color: '#f8eee7' }}
-          aria-label="Toggle sidebar"
-        >
-          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* Sidebar */}
+        {/* Sidebar Drawer */}
         <aside
           className={`
-            fixed lg:sticky top-0 left-0 h-screen lg:h-auto
-            w-64 lg:w-72 z-40 lg:z-auto
+            fixed left-0 z-40
+            w-64 sm:w-72
             transition-transform duration-300 ease-in-out
-            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
-          style={{ backgroundColor: '#f8eee7' }}
+          style={{
+            background: 'linear-gradient(180deg, #94618e 0%, #7a4f73 100%)',
+            top: '64px',
+            height: 'calc(100vh - 64px)'
+          }}
         >
-          <div className="h-full overflow-y-auto border-r-2 pt-6 pb-20 lg:pb-6" style={{ borderColor: '#94618e' }}>
-            <div className="px-4 sm:px-6 mb-6">
-              <h2 className="text-lg sm:text-xl font-bold" style={{ color: '#94618e' }}>
+          <div className="h-full overflow-y-auto">
+            {/* Sidebar Header with Toggle */}
+            <div className="px-4 sm:px-6 py-4 flex items-center justify-between border-b-2" style={{ borderColor: 'rgba(248, 238, 231, 0.2)' }}>
+              <h2 className="text-base sm:text-lg font-bold" style={{ color: '#f8eee7' }}>
                 Job Seeker Portal
               </h2>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-lg transition-all duration-200 hover:bg-white hover:bg-opacity-10"
+                style={{ color: '#f8eee7' }}
+                aria-label="Close sidebar"
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            <nav className="space-y-1 px-3 sm:px-4">
+            {/* Navigation */}
+            <nav className="space-y-1 px-3 sm:px-4 py-4">
               {seekerNavItems.map((item) => {
                 const Icon = item.icon
                 return (
                   <Link
                     key={item.to}
                     to={item.to}
-                    className="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 hover:scale-105"
-                    style={{ color: '#94618e' }}
+                    className="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 hover:bg-white hover:bg-opacity-10"
+                    style={{ color: '#f8eee7' }}
                     activeProps={{
-                      style: { backgroundColor: '#94618e', color: '#f8eee7' },
-                      className: 'flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200',
+                      style: { backgroundColor: '#f8eee7', color: '#94618e' },
+                      className: 'flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 font-semibold',
                     }}
-                    onClick={() => setSidebarOpen(false)}
                   >
                     <Icon size={20} />
                     <span className="font-medium text-sm sm:text-base">{item.label}</span>
@@ -87,16 +90,27 @@ export const SeekerLayout = ({ children }: SeekerLayoutProps) => {
           </div>
         </aside>
 
-        {/* Overlay for mobile */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
+        {/* Floating Toggle Button - Only visible when sidebar is closed */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="fixed top-20 left-4 z-50 p-3 rounded-full shadow-xl transition-all duration-300 hover:scale-110"
+            style={{ backgroundColor: '#94618e', color: '#f8eee7' }}
+            aria-label="Open sidebar"
+          >
+            <Menu size={20} />
+          </button>
         )}
 
-        {/* Main Content */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Main Content - shifts when sidebar is open */}
+        <main
+          className={`
+            flex-1 px-4 sm:px-6 lg:px-8 py-6 sm:py-8
+            transition-all duration-300 ease-in-out
+            ${sidebarOpen ? 'ml-64 sm:ml-72' : 'ml-0'}
+          `}
+          style={{ marginTop: '64px' }}
+        >
           {children}
         </main>
       </div>
