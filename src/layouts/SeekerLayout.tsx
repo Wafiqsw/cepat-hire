@@ -11,6 +11,7 @@ import {
   Settings,
   Menu,
   X,
+  Wallet,
 } from 'lucide-react'
 
 interface SeekerLayoutProps {
@@ -22,6 +23,7 @@ const seekerNavItems = [
   { to: '/seeker/browse-jobs', label: 'Browse Jobs', icon: Search },
   { to: '/seeker/saved-jobs', label: 'Saved Jobs', icon: Bookmark },
   { to: '/seeker/applications', label: 'My Applications', icon: FileText },
+  { to: '/seeker/payments', label: 'My Earnings', icon: Wallet },
   { to: '/seeker/profile', label: 'Profile', icon: User },
   { to: '/seeker/settings', label: 'Settings', icon: Settings },
 ]

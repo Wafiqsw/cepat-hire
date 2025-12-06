@@ -610,6 +610,97 @@ function RouteComponent() {
             Payment List
           </h2>
 
+          {/* Usage Example */}
+          <div className="mb-6 space-y-4">
+            <div className="p-4 rounded-lg" style={{ backgroundColor: '#f8eee7', borderLeft: '4px solid #94618e' }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#94618e' }}>
+                📦 Installation & Import
+              </h3>
+              <pre className="text-xs sm:text-sm overflow-x-auto p-4 rounded" style={{ backgroundColor: '#ffffff' }}>
+                <code style={{ color: '#94618e' }}>{`import { PaymentCard } from '../components'`}</code>
+              </pre>
+            </div>
+
+            <div className="p-4 rounded-lg" style={{ backgroundColor: '#f8eee7', borderLeft: '4px solid #94618e' }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#94618e' }}>
+                🎯 Basic Usage
+              </h3>
+              <pre className="text-xs sm:text-sm overflow-x-auto p-4 rounded" style={{ backgroundColor: '#ffffff' }}>
+                <code style={{ color: '#94618e' }}>{`<PaymentCard
+  payment={{
+    id: '1',
+    amount: 5000.00,
+    currency: 'RM',
+    status: 'completed', // 'completed' | 'pending' | 'ongoing' | 'cancelled'
+    date: 'Dec 3, 2024',
+    description: 'Monthly salary payment',
+    paymentMethod: 'Bank Transfer',
+    transactionId: 'TXN-2024-001234',
+    recipient: 'Ahmad Ibrahim',
+  }}
+  onViewDetails={(id) => console.log('View:', id)}
+  onDownloadReceipt={(id) => console.log('Download:', id)}
+/>`}</code>
+              </pre>
+            </div>
+
+            <div className="p-4 rounded-lg" style={{ backgroundColor: '#f8eee7', borderLeft: '4px solid #94618e' }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#94618e' }}>
+                📋 List Implementation
+              </h3>
+              <pre className="text-xs sm:text-sm overflow-x-auto p-4 rounded" style={{ backgroundColor: '#ffffff' }}>
+                <code style={{ color: '#94618e' }}>{`// Display multiple payments in a list
+<div className="space-y-4">
+  {payments.map(payment => (
+    <PaymentCard
+      key={payment.id}
+      payment={payment}
+      onViewDetails={handleViewDetails}
+      onDownloadReceipt={handleDownload}
+    />
+  ))}
+</div>`}</code>
+              </pre>
+            </div>
+
+            <div className="p-4 rounded-lg" style={{ backgroundColor: '#f8eee7', borderLeft: '4px solid #94618e' }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#94618e' }}>
+                ⚙️ Props Interface
+              </h3>
+              <pre className="text-xs sm:text-sm overflow-x-auto p-4 rounded" style={{ backgroundColor: '#ffffff' }}>
+                <code style={{ color: '#94618e' }}>{`interface PaymentCardProps {
+  payment: {
+    id: string
+    amount: number
+    currency?: string              // Default: 'RM'
+    status: 'completed' | 'pending' | 'ongoing' | 'cancelled'
+    date: string
+    description?: string
+    paymentMethod?: string
+    transactionId?: string
+    recipient?: string
+  }
+  onViewDetails?: (id: string) => void
+  onDownloadReceipt?: (id: string) => void  // Only shown for 'completed' status
+  className?: string
+}`}</code>
+              </pre>
+            </div>
+
+            <div className="p-4 rounded-lg" style={{ backgroundColor: '#f8eee7', borderLeft: '4px solid #16a34a' }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#16a34a' }}>
+                💡 Real Implementation Example
+              </h3>
+              <p className="text-sm mb-2" style={{ color: '#94618e', opacity: 0.8 }}>
+                Check out the full implementation at:
+              </p>
+              <ul className="text-sm space-y-1" style={{ color: '#94618e' }}>
+                <li>• <code className="px-2 py-1 rounded" style={{ backgroundColor: '#ffffff' }}>/employer/payments</code> - Employer payment management</li>
+                <li>• <code className="px-2 py-1 rounded" style={{ backgroundColor: '#ffffff' }}>/seeker/payments</code> - Job seeker earnings tracker</li>
+              </ul>
+            </div>
+          </div>
+
           <div className="space-y-4">
             <PaymentCard
               payment={{

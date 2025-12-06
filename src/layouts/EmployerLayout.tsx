@@ -10,6 +10,7 @@ import {
   Settings,
   Menu,
   X,
+  Wallet,
 } from 'lucide-react'
 
 interface EmployerLayoutProps {
@@ -20,6 +21,7 @@ const employerNavItems = [
   { to: '/employer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/employer/jobs', label: 'My Job Posts', icon: Briefcase },
   { to: '/employer/applicants', label: 'Applicants', icon: Users },
+  { to: '/employer/payments', label: 'Payments', icon: Wallet },
   { to: '/employer/reports', label: 'Reports', icon: FileText },
   { to: '/employer/settings', label: 'Settings', icon: Settings },
 ]
