@@ -12,7 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SeekerUpdateProfileRouteImport } from './routes/seeker/update-profile'
+import { Route as SeekerSavedJobsRouteImport } from './routes/seeker/saved-jobs'
+import { Route as SeekerProfileRouteImport } from './routes/seeker/profile'
 import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
+import { Route as SeekerDashboardRouteImport } from './routes/seeker/dashboard'
+import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
@@ -39,9 +44,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SeekerUpdateProfileRoute = SeekerUpdateProfileRouteImport.update({
+  id: '/seeker/update-profile',
+  path: '/seeker/update-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerSavedJobsRoute = SeekerSavedJobsRouteImport.update({
+  id: '/seeker/saved-jobs',
+  path: '/seeker/saved-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerProfileRoute = SeekerProfileRouteImport.update({
+  id: '/seeker/profile',
+  path: '/seeker/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SeekerPaymentsRoute = SeekerPaymentsRouteImport.update({
   id: '/seeker/payments',
   path: '/seeker/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerDashboardRoute = SeekerDashboardRouteImport.update({
+  id: '/seeker/dashboard',
+  path: '/seeker/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerApplicationsRoute = SeekerApplicationsRouteImport.update({
+  id: '/seeker/applications',
+  path: '/seeker/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployerPaymentsRoute = EmployerPaymentsRouteImport.update({
@@ -102,7 +132,12 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/employer/payments': typeof EmployerPaymentsRoute
+  '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/dashboard': typeof SeekerDashboardRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
+  '/seeker/profile': typeof SeekerProfileRoute
+  '/seeker/saved-jobs': typeof SeekerSavedJobsRoute
+  '/seeker/update-profile': typeof SeekerUpdateProfileRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -118,7 +153,12 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/employer/payments': typeof EmployerPaymentsRoute
+  '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/dashboard': typeof SeekerDashboardRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
+  '/seeker/profile': typeof SeekerProfileRoute
+  '/seeker/saved-jobs': typeof SeekerSavedJobsRoute
+  '/seeker/update-profile': typeof SeekerUpdateProfileRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -135,7 +175,12 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/employer/payments': typeof EmployerPaymentsRoute
+  '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/dashboard': typeof SeekerDashboardRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
+  '/seeker/profile': typeof SeekerProfileRoute
+  '/seeker/saved-jobs': typeof SeekerSavedJobsRoute
+  '/seeker/update-profile': typeof SeekerUpdateProfileRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
@@ -153,7 +198,12 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/employer/payments'
+    | '/seeker/applications'
+    | '/seeker/dashboard'
     | '/seeker/payments'
+    | '/seeker/profile'
+    | '/seeker/saved-jobs'
+    | '/seeker/update-profile'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -169,7 +219,12 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/employer/payments'
+    | '/seeker/applications'
+    | '/seeker/dashboard'
     | '/seeker/payments'
+    | '/seeker/profile'
+    | '/seeker/saved-jobs'
+    | '/seeker/update-profile'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -185,7 +240,12 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/employer/payments'
+    | '/seeker/applications'
+    | '/seeker/dashboard'
     | '/seeker/payments'
+    | '/seeker/profile'
+    | '/seeker/saved-jobs'
+    | '/seeker/update-profile'
     | '/demo/api/names'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
@@ -202,7 +262,12 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
+  SeekerApplicationsRoute: typeof SeekerApplicationsRoute
+  SeekerDashboardRoute: typeof SeekerDashboardRoute
   SeekerPaymentsRoute: typeof SeekerPaymentsRoute
+  SeekerProfileRoute: typeof SeekerProfileRoute
+  SeekerSavedJobsRoute: typeof SeekerSavedJobsRoute
+  SeekerUpdateProfileRoute: typeof SeekerUpdateProfileRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
@@ -235,11 +300,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seeker/update-profile': {
+      id: '/seeker/update-profile'
+      path: '/seeker/update-profile'
+      fullPath: '/seeker/update-profile'
+      preLoaderRoute: typeof SeekerUpdateProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/saved-jobs': {
+      id: '/seeker/saved-jobs'
+      path: '/seeker/saved-jobs'
+      fullPath: '/seeker/saved-jobs'
+      preLoaderRoute: typeof SeekerSavedJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/profile': {
+      id: '/seeker/profile'
+      path: '/seeker/profile'
+      fullPath: '/seeker/profile'
+      preLoaderRoute: typeof SeekerProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/seeker/payments': {
       id: '/seeker/payments'
       path: '/seeker/payments'
       fullPath: '/seeker/payments'
       preLoaderRoute: typeof SeekerPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/dashboard': {
+      id: '/seeker/dashboard'
+      path: '/seeker/dashboard'
+      fullPath: '/seeker/dashboard'
+      preLoaderRoute: typeof SeekerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/applications': {
+      id: '/seeker/applications'
+      path: '/seeker/applications'
+      fullPath: '/seeker/applications'
+      preLoaderRoute: typeof SeekerApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employer/payments': {
@@ -322,7 +422,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,
+  SeekerApplicationsRoute: SeekerApplicationsRoute,
+  SeekerDashboardRoute: SeekerDashboardRoute,
   SeekerPaymentsRoute: SeekerPaymentsRoute,
+  SeekerProfileRoute: SeekerProfileRoute,
+  SeekerSavedJobsRoute: SeekerSavedJobsRoute,
+  SeekerUpdateProfileRoute: SeekerUpdateProfileRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,

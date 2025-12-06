@@ -4,7 +4,7 @@ import { HeadContent, Scripts } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
-import { Header, Footer } from '../components'
+import { Header, Footer, NotFound } from '../components'
 
 import appCss from '../styles.css?url'
 
@@ -32,6 +32,7 @@ export const Route = createRootRouteWithContext<{
     ],
   }),
 
+  notFoundComponent: NotFound,
   shellComponent: RootDocument,
 })
 
