@@ -8,6 +8,7 @@ import {
   Trash2,
   BookmarkPlus,
   ExternalLink,
+  CheckCircle,
 } from 'lucide-react'
 import { Button } from './Button'
 import { Modal, ModalActions } from './Modal'
@@ -29,9 +30,10 @@ interface JobData {
 interface JobCardProps {
   variant: JobCardVariant
   job: JobData
+  isApplied?: boolean
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
-  onApply?: (id: string) => void
+  onApply?: (id: string) => Promise<boolean> | void
   onSave?: (id: string) => void
   onViewDetails?: (id: string) => void
 }
@@ -39,6 +41,7 @@ interface JobCardProps {
 export const JobCard = ({
   variant,
   job,
+  isApplied = false,
   onEdit,
   onDelete,
   onApply,
@@ -49,16 +52,20 @@ export const JobCard = ({
   const [showApplyModal, setShowApplyModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  const [hasApplied, setHasApplied] = useState(isApplied)
 
   const handleDelete = () => {
     onDelete?.(job.id)
     setShowDeleteModal(false)
   }
 
-  const handleApply = () => {
-    onApply?.(job.id)
+  const handleApply = async () => {
+    const result = await onApply?.(job.id)
     setShowApplyModal(false)
-    setShowSuccessModal(true)
+    if (result !== false) {
+      setHasApplied(true)
+      setShowSuccessModal(true)
+    }
   }
 
   const handleSave = () => {
@@ -142,12 +149,26 @@ export const JobCard = ({
       ) : (
         /* Default/Seeker variant */
         <div
-          className="rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2"
+          className="rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 relative"
           style={{
-            backgroundColor: '#f8eee7',
-            borderColor: '#94618e',
+            backgroundColor: hasApplied ? '#f0fdf4' : '#f8eee7',
+            borderColor: hasApplied ? '#16a34a' : '#94618e',
           }}
         >
+          {/* Applied Badge */}
+          {hasApplied && (
+            <div
+              className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-md"
+              style={{
+                backgroundColor: '#16a34a',
+                color: '#ffffff',
+              }}
+            >
+              <CheckCircle size={14} />
+              <span className="text-xs font-bold">Applied</span>
+            </div>
+          )}
+
           {/* Job Image */}
           {job.image && (
             <div className="relative w-full h-32 overflow-hidden">
@@ -162,24 +183,33 @@ export const JobCard = ({
                   background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(148,97,142,0.1) 100%)',
                 }}
               />
+              {/* Applied overlay for image */}
+              {hasApplied && (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(to bottom, rgba(22,163,74,0.1) 0%, rgba(22,163,74,0.2) 100%)',
+                  }}
+                />
+              )}
             </div>
           )}
 
           {/* Header */}
           <div
             className="px-4 py-3 border-b-2 flex items-start justify-between gap-3"
-            style={{ borderBottomColor: '#94618e' }}
+            style={{ borderBottomColor: hasApplied ? '#16a34a' : '#94618e' }}
           >
             <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-bold mb-1 truncate" style={{ color: '#94618e' }} title={job.title}>
+              <h3 className="text-base sm:text-lg font-bold mb-1 truncate" style={{ color: hasApplied ? '#15803d' : '#94618e' }} title={job.title}>
                 {job.title}
               </h3>
-              <p className="text-xs sm:text-sm font-medium truncate" style={{ color: '#94618e', opacity: 0.8 }} title={job.company}>
+              <p className="text-xs sm:text-sm font-medium truncate" style={{ color: hasApplied ? '#15803d' : '#94618e', opacity: 0.8 }} title={job.company}>
                 {job.company}
               </p>
             </div>
 
-            {variant === 'seeker' && (
+            {variant === 'seeker' && !hasApplied && (
               <button
                 onClick={handleSave}
                 className="p-2 rounded-full transition-all duration-200 hover:scale-110"
@@ -198,31 +228,31 @@ export const JobCard = ({
           <div className="px-4 py-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
               <div className="flex items-center gap-2 min-w-0">
-                <MapPin size={14} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
-                <span className="text-xs truncate" style={{ color: '#94618e' }} title={job.location}>
+                <MapPin size={14} style={{ color: hasApplied ? '#15803d' : '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
+                <span className="text-xs truncate" style={{ color: hasApplied ? '#15803d' : '#94618e' }} title={job.location}>
                   {job.location}
                 </span>
               </div>
 
               <div className="flex items-center gap-2 min-w-0">
-                <Briefcase size={14} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
-                <span className="text-xs truncate" style={{ color: '#94618e' }}>
+                <Briefcase size={14} style={{ color: hasApplied ? '#15803d' : '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
+                <span className="text-xs truncate" style={{ color: hasApplied ? '#15803d' : '#94618e' }}>
                   {job.type}
                 </span>
               </div>
 
               {job.salary && (
                 <div className="flex items-center gap-2 min-w-0">
-                  <DollarSign size={14} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
-                  <span className="text-xs font-semibold truncate" style={{ color: '#94618e' }}>
+                  <DollarSign size={14} style={{ color: hasApplied ? '#15803d' : '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
+                  <span className="text-xs font-semibold truncate" style={{ color: hasApplied ? '#15803d' : '#94618e' }}>
                     {job.salary}
                   </span>
                 </div>
               )}
 
               <div className="flex items-center gap-2 min-w-0">
-                <Clock size={14} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
-                <span className="text-xs truncate" style={{ color: '#94618e', opacity: 0.7 }}>
+                <Clock size={14} style={{ color: hasApplied ? '#15803d' : '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
+                <span className="text-xs truncate" style={{ color: hasApplied ? '#15803d' : '#94618e', opacity: 0.7 }}>
                   {job.postedDate}
                 </span>
               </div>
@@ -231,7 +261,7 @@ export const JobCard = ({
             {job.description && (
               <p
                 className="text-xs leading-relaxed line-clamp-2"
-                style={{ color: '#94618e', opacity: 0.8 }}
+                style={{ color: hasApplied ? '#15803d' : '#94618e', opacity: 0.8 }}
                 title={job.description}
               >
                 {job.description}
@@ -242,20 +272,36 @@ export const JobCard = ({
           {/* Footer Actions */}
           <div
             className="px-4 py-2.5 border-t-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
-            style={{ borderTopColor: '#94618e' }}
+            style={{ borderTopColor: hasApplied ? '#16a34a' : '#94618e' }}
           >
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowApplyModal(true)}
-              className="flex-1 justify-center"
-            >
-              Apply Now
-            </Button>
+            {hasApplied ? (
+              <button
+                disabled
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-full font-bold text-sm cursor-not-allowed"
+                style={{
+                  backgroundColor: '#dcfce7',
+                  color: '#16a34a',
+                  border: '2px solid #16a34a',
+                }}
+              >
+                <CheckCircle size={16} />
+                Applied
+              </button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowApplyModal(true)}
+                className="flex-1 justify-center"
+              >
+                Apply Now
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
               className="flex-1 justify-center"
+              onClick={handleViewDetails}
             >
               <ExternalLink size={14} className="sm:mr-1" />
               <span className="hidden sm:inline">Details</span>

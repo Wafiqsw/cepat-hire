@@ -78,7 +78,7 @@ function RouteComponent() {
     position: app.job?.title || 'Unknown Position',
     experience: app.candidate?.experience || 'Not specified',
     appliedDate: formatDate(app.createdAt),
-    status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected',
+    status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'hired',
   })) || []
 
   // Limit to 3 items for dashboard display

@@ -31,6 +31,9 @@ function RouteComponent() {
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [showHireConfirmModal, setShowHireConfirmModal] = useState(false)
   const [showHireSuccessModal, setShowHireSuccessModal] = useState(false)
+  const [paymentAmount, setPaymentAmount] = useState('')
+  const [workPeriod, setWorkPeriod] = useState('')
+  const [isHiring, setIsHiring] = useState(false)
   const { user } = useAuth()
 
   // Fetch real data from Convex - filtered by employer
@@ -44,6 +47,7 @@ function RouteComponent() {
   // Mutations
   const updateApplicationStatus = useMutation(api.applications.updateStatus)
   const createEmployee = useMutation(api.employees.create)
+  const createPayment = useMutation(api.payments.create)
 
   // Compute jobs with application counts
   const jobsWithCounts = jobs?.map((job) => {
@@ -71,7 +75,7 @@ function RouteComponent() {
       skills: app.candidate?.skills?.join(', ') || 'Not specified',
       experience: app.candidate?.experience || 'Not specified',
       appliedDate: formatDate(app.createdAt),
-      status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected',
+      status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'hired',
     })) || []
     : []
 
@@ -139,6 +143,17 @@ function RouteComponent() {
   const handleHireApplicant = async (id: string) => {
     if (!user?.id || !selectedJob) return
 
+    const amount = parseFloat(paymentAmount)
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid payment amount')
+      return
+    }
+    if (!workPeriod.trim()) {
+      alert('Please enter the work period')
+      return
+    }
+
+    setIsHiring(true)
     try {
       // Find the application to get all necessary IDs
       const application = applicationsWithDetails?.find(app => app._id === id)
@@ -158,12 +173,28 @@ function RouteComponent() {
         applicationId: id as Id<'applications'>,
       })
 
+      // Create payment record for the seeker
+      await createPayment({
+        jobId: application.jobId,
+        candidateId: application.candidateId,
+        amount: amount,
+        currency: 'RM',
+        status: 'pending',
+        dateRange: workPeriod,
+        description: `Payment for ${application.job?.title || 'job'}`,
+        paymentMethod: 'pending',
+      })
+
       setShowHireConfirmModal(false)
       setIsDetailsModalOpen(false)
+      setPaymentAmount('')
+      setWorkPeriod('')
       setShowHireSuccessModal(true)
     } catch (error) {
       console.error('Failed to hire applicant:', error)
       alert('Failed to hire applicant. Please try again.')
+    } finally {
+      setIsHiring(false)
     }
   }
 
@@ -535,7 +566,13 @@ function RouteComponent() {
       {showHireConfirmModal && selectedApplicant && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setShowHireConfirmModal(false)}
+          onClick={() => {
+            if (!isHiring) {
+              setShowHireConfirmModal(false)
+              setPaymentAmount('')
+              setWorkPeriod('')
+            }
+          }}
         >
           <div
             className="absolute inset-0 transition-opacity duration-300"
@@ -547,22 +584,76 @@ function RouteComponent() {
             onClick={(e) => e.stopPropagation()}
             style={{ backgroundColor: '#f8eee7' }}
           >
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#10b981' }}>
-                <Briefcase size={32} style={{ color: '#ffffff' }} />
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#10b981' }}>
+                  <Briefcase size={32} style={{ color: '#ffffff' }} />
+                </div>
+                <h2 className="text-2xl font-bold mb-2" style={{ color: '#94618e' }}>
+                  Hire {selectedApplicant.name}?
+                </h2>
+                <p className="text-sm" style={{ color: '#94618e', opacity: 0.8 }}>
+                  Enter the payment details for this worker
+                </p>
               </div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: '#94618e' }}>
-                Hire {selectedApplicant.name}?
-              </h2>
-              <p className="text-base mb-6" style={{ color: '#94618e', opacity: 0.8 }}>
-                This will create an employee record and update the application status to "Hired". This action cannot be undone.
+
+              {/* Payment Details Form */}
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-bold mb-2" style={{ color: '#94618e' }}>
+                    Payment Amount (RM)
+                  </label>
+                  <input
+                    type="number"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    placeholder="e.g. 500.00"
+                    className="w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      borderColor: '#94618e',
+                      color: '#94618e',
+                    }}
+                    min="0"
+                    step="0.01"
+                    disabled={isHiring}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2" style={{ color: '#94618e' }}>
+                    Work Period
+                  </label>
+                  <input
+                    type="text"
+                    value={workPeriod}
+                    onChange={(e) => setWorkPeriod(e.target.value)}
+                    placeholder="e.g. 1 Dec - 15 Dec 2024"
+                    className="w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-2"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      borderColor: '#94618e',
+                      color: '#94618e',
+                    }}
+                    disabled={isHiring}
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-center mb-4" style={{ color: '#94618e', opacity: 0.6 }}>
+                This will create an employee record and a payment record for the worker.
               </p>
+
               <div className="flex gap-3">
                 <Button
                   variant="outline"
                   size="md"
-                  onClick={() => setShowHireConfirmModal(false)}
+                  onClick={() => {
+                    setShowHireConfirmModal(false)
+                    setPaymentAmount('')
+                    setWorkPeriod('')
+                  }}
                   className="flex-1"
+                  disabled={isHiring}
                 >
                   CANCEL
                 </Button>
@@ -572,8 +663,9 @@ function RouteComponent() {
                   onClick={() => handleHireApplicant(selectedApplicant.id)}
                   className="flex-1"
                   style={{ backgroundColor: '#10b981' }}
+                  disabled={isHiring || !paymentAmount || !workPeriod}
                 >
-                  YES, HIRE
+                  {isHiring ? 'HIRING...' : 'YES, HIRE'}
                 </Button>
               </div>
             </div>

@@ -52,7 +52,8 @@ export const updateStatus = mutation({
       v.literal("pending"),
       v.literal("reviewed"),
       v.literal("shortlisted"),
-      v.literal("rejected")
+      v.literal("rejected"),
+      v.literal("hired")
     ),
     aiScore: v.optional(v.number()),
     notes: v.optional(v.string()),

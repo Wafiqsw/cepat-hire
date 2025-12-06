@@ -43,6 +43,7 @@ function DashboardPage() {
       pending: dashboardStats.applications.pending,
       accepted: dashboardStats.applications.shortlisted,
       interviewing: dashboardStats.applications.reviewed,
+      hired: dashboardStats.applications.hired,
     },
     earnings: {
       total: dashboardStats.earnings.total,
@@ -52,7 +53,7 @@ function DashboardPage() {
     savedJobs: dashboardStats.savedJobs,
     profileCompletion: dashboardStats.profileCompletion,
   } : {
-    applications: { total: 0, pending: 0, accepted: 0, interviewing: 0 },
+    applications: { total: 0, pending: 0, accepted: 0, interviewing: 0, hired: 0 },
     earnings: { total: 0, thisMonth: 0, available: 0 },
     savedJobs: 0,
     profileCompletion: 0,
@@ -63,14 +64,16 @@ function DashboardPage() {
     id: app._id,
     jobTitle: app.job?.title || 'Unknown Job',
     company: app.job?.company || 'Unknown Company',
-    status: (app.status === 'shortlisted' ? 'accepted' :
-      app.status === 'reviewed' ? 'interviewing' :
-        app.status) as 'accepted' | 'pending' | 'rejected' | 'interviewing',
+    status: (app.status === 'hired' ? 'hired' :
+      app.status === 'shortlisted' ? 'accepted' :
+        app.status === 'reviewed' ? 'interviewing' :
+          app.status) as 'hired' | 'accepted' | 'pending' | 'rejected' | 'interviewing',
     appliedDate: new Date(app.createdAt).toLocaleDateString('en-GB'),
   })) || []
 
   const getStatusColor = (status: string) => {
     const colors = {
+      hired: '#059669',
       accepted: '#10b981',
       pending: '#f59e0b',
       rejected: '#ef4444',
@@ -203,7 +206,15 @@ function DashboardPage() {
             <p className="text-sm mb-3" style={{ color: '#94618e', opacity: 0.6 }}>
               Total Applications
             </p>
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-xs flex-wrap">
+              {stats.applications.hired > 0 && (
+                <span
+                  className="px-2 py-1 rounded-full"
+                  style={{ backgroundColor: '#d1fae5', color: '#047857' }}
+                >
+                  {stats.applications.hired} Hired
+                </span>
+              )}
               <span
                 className="px-2 py-1 rounded-full"
                 style={{ backgroundColor: '#fef3c7', color: '#d97706' }}
@@ -212,9 +223,9 @@ function DashboardPage() {
               </span>
               <span
                 className="px-2 py-1 rounded-full"
-                style={{ backgroundColor: '#d1fae5', color: '#059669' }}
+                style={{ backgroundColor: '#dbeafe', color: '#1d4ed8' }}
               >
-                {stats.applications.accepted} Accepted
+                {stats.applications.accepted} Shortlisted
               </span>
             </div>
           </div>

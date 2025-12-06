@@ -166,6 +166,18 @@ export const getMyApplications = query({
   },
 });
 
+export const getAppliedJobIds = query({
+  args: { candidateId: v.id("candidates") },
+  handler: async (ctx, args) => {
+    const applications = await ctx.db
+      .query("applications")
+      .withIndex("by_candidate", (q) => q.eq("candidateId", args.candidateId))
+      .collect();
+
+    return applications.map((app) => app.jobId);
+  },
+});
+
 export const getApplicationStats = query({
   args: { candidateId: v.id("candidates") },
   handler: async (ctx, args) => {
@@ -180,6 +192,7 @@ export const getApplicationStats = query({
       reviewed: applications.filter((a) => a.status === "reviewed").length,
       shortlisted: applications.filter((a) => a.status === "shortlisted").length,
       rejected: applications.filter((a) => a.status === "rejected").length,
+      hired: applications.filter((a) => a.status === "hired").length,
     };
   },
 });
@@ -338,6 +351,7 @@ export const getDashboardStats = query({
         reviewed: applications.filter((a) => a.status === "reviewed").length,
         shortlisted: applications.filter((a) => a.status === "shortlisted").length,
         rejected: applications.filter((a) => a.status === "rejected").length,
+        hired: applications.filter((a) => a.status === "hired").length,
       },
       earnings: {
         total: completedEarnings + pendingEarnings,
@@ -376,30 +390,38 @@ export const getRecentApplications = query({
 export const getWorkHistory = query({
   args: { candidateId: v.id("candidates") },
   handler: async (ctx, args) => {
-    // Get completed/shortlisted applications as work history
+    // Get hired applications as work history
     const applications = await ctx.db
       .query("applications")
       .withIndex("by_candidate", (q) => q.eq("candidateId", args.candidateId))
       .collect();
 
-    const completedApps = applications.filter(
-      (a) => a.status === "shortlisted" || a.status === "reviewed"
-    );
+    // Only hired applications count as actual work history
+    const hiredApps = applications.filter((a) => a.status === "hired");
 
     const workHistory = await Promise.all(
-      completedApps.map(async (app) => {
+      hiredApps.map(async (app) => {
         const job = await ctx.db.get(app.jobId);
         if (!job) return null;
+
+        // Check if there's an employee record for more details
+        const employee = await ctx.db
+          .query("employees")
+          .withIndex("by_candidate", (q) => q.eq("candidateId", args.candidateId))
+          .filter((q) => q.eq(q.field("jobId"), app.jobId))
+          .first();
 
         return {
           id: app._id,
           company: job.company,
           position: job.title,
           location: job.location || "Remote",
-          startDate: new Date(app.createdAt).toLocaleDateString("en-GB"),
-          endDate: app.status === "shortlisted" ? "Present" : new Date(app.createdAt).toLocaleDateString("en-GB"),
+          startDate: employee
+            ? new Date(employee.hiredDate).toLocaleDateString("en-GB")
+            : new Date(app.createdAt).toLocaleDateString("en-GB"),
+          endDate: employee?.status === "active" ? "Present" : "Completed",
           description: job.description,
-          isCurrentJob: app.status === "shortlisted",
+          isCurrentJob: employee?.status === "active",
         };
       })
     );
