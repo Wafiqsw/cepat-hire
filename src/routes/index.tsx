@@ -144,31 +144,62 @@ function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[1, 2, 3, 4].map((member) => (
+            {[
+              {
+                name: 'Haziq Ilham',
+                role: 'Full Stack Developer',
+                image: 'https://media.licdn.com/dms/image/v2/D4E03AQH2Z7HwgB6aWA/profile-displayphoto-shrink_800_800/B4EZg4X.stHgAg-/0/1753292467555?e=1766620800&v=beta&t=oIfDi4SbwiSfRodg13T5ZJ1qDTmo0FKQ0MC9jwR7tO0',
+                linkedin: 'haziq-ilham'
+              },
+              {
+                name: 'Muhammad Wafiq',
+                role: 'Full Stack Developer',
+                image: 'https://media.licdn.com/dms/image/v2/D4E35AQHwzS4SPX2ftg/profile-framedphoto-shrink_200_200/profile-framedphoto-shrink_200_200/0/1721941055338?e=1765663200&v=beta&t=n9dS3Yaj_rJRV8oR0TX8fqYiyfqi6Al2Qjv9nOXb04s',
+                linkedin: 'muhammad-wafiq-bin-shukri-wafiqi'
+              },
+              {
+                name: 'Amirul Hakim',
+                role: 'Full Stack Developer',
+                image: 'https://media.licdn.com/dms/image/v2/D4D35AQGkUVzsjLU2YQ/profile-framedphoto-shrink_200_200/B4DZb3WJ8zGwAg-/0/1747906502877?e=1765663200&v=beta&t=1Ss9D0bSFwJ64jZbEqzTYN4D9lweH0Jj3xcO-NDl2LE',
+                linkedin: 'amirul-hakim-a34a8b287'
+              },
+              {
+                name: 'Mirza Aidil',
+                role: 'Full Stack Developer',
+                image: 'https://media.licdn.com/dms/image/v2/D4E35AQG-WfJN631v9Q/profile-framedphoto-shrink_200_200/B4EZWEX7NnH0Ac-/0/1741682619557?e=1765663200&v=beta&t=oGnIBOjExYrM2mSC0Wxa2dpBXWCCbksss2dwSsYe_WU',
+                linkedin: 'mirza-aidil'
+              }
+            ].map((member) => (
               <div
-                key={member}
+                key={member.name}
                 className="text-center transition-all duration-300 hover:scale-105"
               >
-                <div
-                  className="w-48 h-48 mx-auto mb-4 rounded-full overflow-hidden"
-                  style={{
-                    backgroundColor: '#f8eee7',
-                    border: '4px solid #94618e',
-                  }}
+                <a
+                  href={`https://www.linkedin.com/in/${member.linkedin}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
                 >
                   <div
-                    className="w-full h-full flex items-center justify-center"
-                    style={{ color: '#94618e' }}
+                    className="w-48 h-48 mx-auto mb-4 rounded-full overflow-hidden"
+                    style={{
+                      backgroundColor: '#f8eee7',
+                      border: '4px solid #94618e',
+                    }}
                   >
-                    <Users size={80} />
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: '#94618e' }}>
-                  Developer {member}
-                </h3>
-                <p style={{ color: '#94618e', opacity: 0.7 }}>
-                  Full Stack Developer
-                </p>
+                  <h3 className="text-xl font-bold mb-2" style={{ color: '#94618e' }}>
+                    {member.name}
+                  </h3>
+                  <p style={{ color: '#94618e', opacity: 0.7 }}>
+                    {member.role}
+                  </p>
+                </a>
               </div>
             ))}
           </div>
