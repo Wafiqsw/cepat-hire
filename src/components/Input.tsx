@@ -55,7 +55,7 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement | HTMLSel
     const isPassword = restProps.as !== 'textarea' && restProps.as !== 'select' && restProps.type === 'password'
 
     const baseStyles = {
-      backgroundColor: '#f8eee7',
+      backgroundColor: '#ffffff',
       color: '#94618e',
       borderColor: error ? '#dc2626' : isFocused ? '#94618e' : '#d1c4cc',
     }
