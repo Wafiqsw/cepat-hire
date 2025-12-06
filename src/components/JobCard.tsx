@@ -64,7 +64,7 @@ export const JobCard = ({
 
   return (
     <>
-      {variant === 'employer' && job.image ? (
+      {variant === 'employer' ? (
         /* Employer variant with modern card design */
         <div
           className="rounded-xl overflow-hidden border-2 shadow-md hover:shadow-xl transition-all duration-300"
@@ -73,36 +73,43 @@ export const JobCard = ({
             borderColor: '#94618e',
           }}
         >
-          {/* Job Image with Title Overlay */}
-          <div className="relative w-full h-48 overflow-hidden">
-            <img
-              src={job.image}
-              alt={job.title}
-              className="w-full h-full object-cover"
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(90,56,81,0.8) 100%)',
-              }}
-            />
-            {/* Job Title Overlay */}
-            <div className="absolute bottom-3 left-4 right-4">
-              <h3 className="text-lg font-bold text-white truncate">
-                {job.title}
-              </h3>
+          {/* Job Image with Title Overlay (optional) */}
+          {job.image && (
+            <div className="relative w-full h-48 overflow-hidden">
+              <img
+                src={job.image}
+                alt={job.title}
+                className="w-full h-full object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(90,56,81,0.8) 100%)',
+                }}
+              />
+              {/* Job Title Overlay */}
+              <div className="absolute bottom-3 left-4 right-4">
+                <h3 className="text-lg font-bold text-white truncate">
+                  {job.title}
+                </h3>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Card Content */}
           <div className="p-5">
+            {!job.image && (
+              <h3 className="text-lg font-bold mb-2" style={{ color: '#f8eee7' }}>
+                {job.title}
+              </h3>
+            )}
             <p className="text-sm font-medium mb-2" style={{ color: '#f8eee7', opacity: 0.9 }}>
               {job.company}
             </p>
             <p className="text-xs mb-3" style={{ color: '#f8eee7', opacity: 0.7 }}>
               {job.location} • {job.type} • {job.salary}
             </p>
-            
+
             {/* Action Buttons */}
             <div className="flex gap-2">
               <Button

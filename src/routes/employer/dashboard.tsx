@@ -53,6 +53,7 @@ function RouteComponent() {
     salary: job.salary,
     postedDate: formatRelativeTime(job.createdAt),
     description: job.description,
+    image: job.image,
   })) || []
 
   // Transform applications data for ApplicantCard component

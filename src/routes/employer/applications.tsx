@@ -1,102 +1,68 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { Button } from '../../components/Button'
 import { ApplicantCard } from '../../components/ApplicantCard'
 import { AvatarPlaceholder } from '../../components/ImagePlaceholder'
-import { Modal, ModalActions } from '../../components/Modal'
+import { EmployerLayout } from '../../layouts/EmployerLayout'
 import { ChevronLeft, Star, Mail, Phone, MapPin, Briefcase } from 'lucide-react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/applications')({
   component: RouteComponent,
 })
+
+// Helper to format date
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 
 function RouteComponent() {
   const [selectedJob, setSelectedJob] = useState<string | null>(null)
   const [selectedApplicant, setSelectedApplicant] = useState<any>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
 
-  // Mock jobs data - will be replaced with backend data
-  const mockJobs = [
-    {
-      id: '1',
-      title: 'Part-Time Barista',
-      company: 'Cafe Delight',
-      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80',
-      applicantsCount: 12,
-    },
-    {
-      id: '2',
-      title: 'Retail Sales Assistant',
-      company: 'Fashion Outlet',
-      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
-      applicantsCount: 8,
-    },
-    {
-      id: '3',
-      title: 'Food Delivery Rider',
-      company: 'Quick Eats',
-      image: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&q=80',
-      applicantsCount: 15,
-    },
-    {
-      id: '4',
-      title: 'Tutor - Mathematics',
-      company: 'Learning Center',
-      image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
-      applicantsCount: 5,
-    },
-    {
-      id: '5',
-      title: 'Warehouse Packer',
-      company: 'Logistics Hub',
-      image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80',
-      applicantsCount: 20,
-    },
-    {
-      id: '6',
-      title: 'Restaurant Server',
-      company: 'Family Dining',
-      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
-      applicantsCount: 10,
-    },
-  ]
+  // Fetch real data from Convex
+  const jobs = useQuery(api.jobs.list, {})
+  const applicationsWithDetails = useQuery(api.applications.listWithDetails)
 
-  // Mock applicants data - will be replaced with backend data
-  const mockApplicants = [
-    {
-      id: '1',
-      name: 'Ahmad Abdullah',
-      email: 'ahmad@example.com',
-      phone: '+60 12-345 6789',
-      location: 'Kuala Lumpur',
-      position: 'Part-Time Barista',
-      skills: 'Customer Service, Coffee Making, Team Work',
-      appliedDate: 'Dec 5, 2025',
-      status: 'pending' as const,
-    },
-    {
-      id: '2',
-      name: 'Siti Nurhaliza',
-      email: 'siti@example.com',
-      phone: '+60 13-456 7890',
-      location: 'Selangor',
-      position: 'Part-Time Barista',
-      skills: 'Communication, Sales, Organization',
-      appliedDate: 'Dec 4, 2025',
-      status: 'reviewed' as const,
-    },
-    {
-      id: '3',
-      name: 'Lee Wei Ming',
-      email: 'leewei@example.com',
-      phone: '+60 14-567 8901',
-      location: 'Kuala Lumpur',
-      position: 'Part-Time Barista',
-      skills: 'Leadership, Multitasking, Problem Solving',
-      appliedDate: 'Dec 3, 2025',
-      status: 'shortlisted' as const,
-    },
-  ]
+  // Mutations
+  const updateApplicationStatus = useMutation(api.applications.updateStatus)
+
+  // Compute jobs with application counts
+  const jobsWithCounts = jobs?.map((job) => {
+    const applicantCount = applicationsWithDetails?.filter(
+      (app) => app.jobId === job._id
+    ).length || 0
+    return {
+      id: job._id,
+      title: job.title,
+      company: job.company,
+      image: job.image,
+      applicantsCount: applicantCount,
+    }
+  }) || []
+
+  // Get applicants for selected job
+  const applicantsForJob = selectedJob
+    ? applicationsWithDetails?.filter((app) => app.jobId === selectedJob).map((app) => ({
+        id: app._id,
+        name: app.candidate?.name || 'Unknown',
+        email: app.candidate?.email || '',
+        phone: app.candidate?.phone || 'N/A',
+        location: app.candidate?.location || 'N/A',
+        position: app.job?.title || 'Unknown Position',
+        skills: app.candidate?.skills?.join(', ') || 'Not specified',
+        experience: app.candidate?.experience || 'Not specified',
+        appliedDate: formatDate(app.createdAt),
+        status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected',
+      })) || []
+    : []
 
   const handleViewApplicants = (jobId: string) => {
     setSelectedJob(jobId)
@@ -107,29 +73,47 @@ function RouteComponent() {
   }
 
   const handleViewDetails = (id: string) => {
-    const applicant = mockApplicants.find((a) => a.id === id)
+    const applicant = applicantsForJob.find((a) => a.id === id)
     if (applicant) {
       setSelectedApplicant(applicant)
       setIsDetailsModalOpen(true)
     }
   }
 
-  const handleApproveApplicant = (id: string) => {
-    console.log('Approve applicant:', id)
-    setIsDetailsModalOpen(false)
-    // Will be implemented with backend
+  const handleApproveApplicant = async (id: string) => {
+    try {
+      await updateApplicationStatus({
+        id: id as Id<'applications'>,
+        status: 'reviewed',
+      })
+      setIsDetailsModalOpen(false)
+    } catch (error) {
+      console.error('Failed to approve applicant:', error)
+    }
   }
 
-  const handleShortlistApplicant = (id: string) => {
-    console.log('Shortlist applicant:', id)
-    setIsDetailsModalOpen(false)
-    // Will be implemented with backend
+  const handleShortlistApplicant = async (id: string) => {
+    try {
+      await updateApplicationStatus({
+        id: id as Id<'applications'>,
+        status: 'shortlisted',
+      })
+      setIsDetailsModalOpen(false)
+    } catch (error) {
+      console.error('Failed to shortlist applicant:', error)
+    }
   }
 
-  const handleRejectApplicant = (id: string) => {
-    console.log('Reject applicant:', id)
-    setIsDetailsModalOpen(false)
-    // Will be implemented with backend
+  const handleRejectApplicant = async (id: string) => {
+    try {
+      await updateApplicationStatus({
+        id: id as Id<'applications'>,
+        status: 'rejected',
+      })
+      setIsDetailsModalOpen(false)
+    } catch (error) {
+      console.error('Failed to reject applicant:', error)
+    }
   }
 
   const handleAcceptApplicant = (id: string) => {
@@ -141,65 +125,84 @@ function RouteComponent() {
     setSelectedApplicant(null)
   }
 
-  const selectedJobData = mockJobs.find((job) => job.id === selectedJob)
+  const selectedJobData = jobsWithCounts.find((job) => job.id === selectedJob)
 
-  return (
-    <div className="w-full max-w-6xl mx-auto px-4">
-      {/* Header */}
-      <div className="mb-8">
-        {selectedJob ? (
-          <div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBackToJobs}
-              className="mb-4"
-            >
-              <ChevronLeft size={16} />
-              Back to Jobs
-            </Button>
-            <h1 className="text-3xl font-bold" style={{ color: '#94618e' }}>
-              {selectedJobData?.title}
-            </h1>
-            <p className="text-base mt-2" style={{ color: '#94618e', opacity: 0.7 }}>
-              {mockApplicants.length} Applicants
-            </p>
-          </div>
-        ) : (
-          <h1 className="text-3xl font-bold" style={{ color: '#94618e' }}>
+  // Loading state
+  if (jobs === undefined || applicationsWithDetails === undefined) {
+    return (
+      <EmployerLayout>
+        <div className="w-full max-w-6xl mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
             APPLICATIONS
           </h1>
-        )}
-      </div>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </EmployerLayout>
+    )
+  }
 
-      {selectedJob ? (
-        /* Applicants List View */
-        <div className="space-y-4">
-          {mockApplicants.map((applicant) => (
-            <ApplicantCard
-              key={applicant.id}
-              applicant={applicant}
-              onViewDetails={handleViewDetails}
-              onAccept={handleAcceptApplicant}
-              onReject={handleRejectApplicant}
-            />
-          ))}
-          
-          {mockApplicants.length === 0 && (
-            <div
-              className="rounded-xl p-12 text-center"
-              style={{ backgroundColor: '#f8eee7', borderColor: '#94618e', borderWidth: '2px' }}
-            >
-              <p className="text-lg font-medium" style={{ color: '#94618e' }}>
-                No applicants yet for this position
+  return (
+    <EmployerLayout>
+      <div className="w-full max-w-6xl mx-auto px-4">
+        {/* Header */}
+        <div className="mb-8">
+          {selectedJob ? (
+            <div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBackToJobs}
+                className="mb-4"
+              >
+                <ChevronLeft size={16} />
+                Back to Jobs
+              </Button>
+              <h1 className="text-3xl font-bold" style={{ color: '#94618e' }}>
+                {selectedJobData?.title}
+              </h1>
+              <p className="text-base mt-2" style={{ color: '#94618e', opacity: 0.7 }}>
+                {applicantsForJob.length} Applicant{applicantsForJob.length !== 1 ? 's' : ''}
               </p>
             </div>
+          ) : (
+            <h1 className="text-3xl font-bold" style={{ color: '#94618e' }}>
+              APPLICATIONS
+            </h1>
           )}
         </div>
-      ) : (
-        /* Jobs Grid View */
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockJobs.map((job) => (
+
+        {selectedJob ? (
+          /* Applicants List View */
+          <div className="space-y-4">
+            {applicantsForJob.map((applicant) => (
+              <ApplicantCard
+                key={applicant.id}
+                applicant={applicant}
+                onViewDetails={handleViewDetails}
+                onAccept={handleAcceptApplicant}
+                onReject={handleRejectApplicant}
+              />
+            ))}
+
+            {applicantsForJob.length === 0 && (
+              <div
+                className="rounded-xl p-12 text-center"
+                style={{ backgroundColor: '#f8eee7', borderColor: '#94618e', borderWidth: '2px' }}
+              >
+                <p className="text-lg font-medium" style={{ color: '#94618e' }}>
+                  No applicants yet for this position
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Jobs Grid View */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {jobsWithCounts.map((job) => (
             <div
               key={job.id}
               className="rounded-xl overflow-hidden border-2 shadow-md hover:shadow-xl transition-all duration-300"
@@ -413,6 +416,7 @@ function RouteComponent() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </EmployerLayout>
   )
 }
