@@ -4,6 +4,7 @@ import { api } from '../../../convex/_generated/api'
 import { Button } from '../../components/Button'
 import { JobCard } from '../../components/JobCard'
 import { ApplicantCard } from '../../components/ApplicantCard'
+import { EmployerLayout } from '../../layouts/EmployerLayout'
 import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/dashboard')({
@@ -124,141 +125,144 @@ function RouteComponent() {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
-      {/* Dashboard Title */}
-      <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
-        DASHBOARD
-      </h1>
+    <EmployerLayout>
+      <div className="w-full max-w-6xl mx-auto px-4">
+        {/* Dashboard Title */}
+        <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
+          DASHBOARD
+        </h1>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {/* Active Jobs Card */}
-        <div
-          className="rounded-2xl p-6 flex flex-col items-center justify-center"
-          style={{ backgroundColor: '#5a3851' }}
-        >
-          <div className="text-5xl font-bold text-white mb-2">
-            {stats.activeJobs}
-          </div>
-          <div className="text-sm font-semibold text-white uppercase tracking-wide">
-            ACTIVE JOB{stats.activeJobs !== 1 ? 'S' : ''}
-          </div>
-        </div>
-
-        {/* Applications Card */}
-        <div
-          className="rounded-2xl p-6 flex flex-col items-center justify-center"
-          style={{ backgroundColor: '#5a3851' }}
-        >
-          <div className="text-5xl font-bold text-white mb-2">
-            {stats.applications}
-          </div>
-          <div className="text-sm font-semibold text-white uppercase tracking-wide">
-            APPLICATION{stats.applications !== 1 ? 'S' : ''}
-          </div>
-        </div>
-
-        {/* Pending Card */}
-        <div
-          className="rounded-2xl p-6 flex flex-col items-center justify-center"
-          style={{ backgroundColor: '#5a3851' }}
-        >
-          <div className="text-5xl font-bold text-white mb-2">
-            {stats.pending}
-          </div>
-          <div className="text-sm font-semibold text-white uppercase tracking-wide">
-            PENDING
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Job Posting and Posted Jobs */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Job Posting Section */}
-          <div>
-            <h2
-              className="text-sm font-bold uppercase mb-3 tracking-wide"
-              style={{ color: '#5a3851' }}
-            >
-              JOB POSTING
-            </h2>
-            <div
-              className="rounded-2xl p-6"
-              style={{ backgroundColor: '#b8a0b3' }}
-            >
-              <Button
-                variant="primary"
-                size="md"
-                className="w-full sm:w-auto"
-              >
-                CREATE A NEW JOB
-              </Button>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {/* Active Jobs Card */}
+          <div
+            className="rounded-2xl p-6 flex flex-col items-center justify-center"
+            style={{ backgroundColor: '#5a3851' }}
+          >
+            <div className="text-5xl font-bold text-white mb-2">
+              {stats.activeJobs}
+            </div>
+            <div className="text-sm font-semibold text-white uppercase tracking-wide">
+              ACTIVE JOB{stats.activeJobs !== 1 ? 'S' : ''}
             </div>
           </div>
 
-          {/* Posted Jobs Section */}
-          <div>
+          {/* Applications Card */}
+          <div
+            className="rounded-2xl p-6 flex flex-col items-center justify-center"
+            style={{ backgroundColor: '#5a3851' }}
+          >
+            <div className="text-5xl font-bold text-white mb-2">
+              {stats.applications}
+            </div>
+            <div className="text-sm font-semibold text-white uppercase tracking-wide">
+              APPLICATION{stats.applications !== 1 ? 'S' : ''}
+            </div>
+          </div>
+
+          {/* Pending Card */}
+          <div
+            className="rounded-2xl p-6 flex flex-col items-center justify-center"
+            style={{ backgroundColor: '#5a3851' }}
+          >
+            <div className="text-5xl font-bold text-white mb-2">
+              {stats.pending}
+            </div>
+            <div className="text-sm font-semibold text-white uppercase tracking-wide">
+              PENDING
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Job Posting and Posted Jobs */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Job Posting Section */}
+            <div>
+              <h2
+                className="text-sm font-bold uppercase mb-3 tracking-wide"
+                style={{ color: '#5a3851' }}
+              >
+                JOB POSTING
+              </h2>
+              <div
+                className="rounded-2xl p-6"
+                style={{ backgroundColor: '#b8a0b3' }}
+              >
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="w-full sm:w-auto"
+                >
+                  CREATE A NEW JOB
+                </Button>
+              </div>
+            </div>
+
+            {/* Posted Jobs Section */}
+            <div>
+              <h2
+                className="text-sm font-bold uppercase mb-3 tracking-wide"
+                style={{ color: '#5a3851' }}
+              >
+                POSTED JOB{jobsForDisplay.length !== 1 ? 'S' : ''} ({jobsForDisplay.length})
+              </h2>
+              <div className="space-y-4">
+                {jobsForDisplay.length === 0 ? (
+                  <div
+                    className="rounded-xl p-6 text-center"
+                    style={{ backgroundColor: '#f8eee7', color: '#94618e' }}
+                  >
+                    No jobs posted yet. Create your first job posting!
+                  </div>
+                ) : (
+                  jobsForDisplay.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      variant="employer"
+                      job={job}
+                      onEdit={handleEditJob}
+                      onDelete={handleDeleteJob}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Applications Panel */}
+          <div className="lg:col-span-1">
             <h2
               className="text-sm font-bold uppercase mb-3 tracking-wide"
               style={{ color: '#5a3851' }}
             >
-              POSTED JOB{jobsForDisplay.length !== 1 ? 'S' : ''} ({jobsForDisplay.length})
+              APPLICATION{applicantsForDisplay.length !== 1 ? 'S' : ''} ({applicantsForDisplay.length})
             </h2>
             <div className="space-y-4">
-              {jobsForDisplay.length === 0 ? (
+              {applicantsForDisplay.length === 0 ? (
                 <div
                   className="rounded-xl p-6 text-center"
                   style={{ backgroundColor: '#f8eee7', color: '#94618e' }}
                 >
-                  No jobs posted yet. Create your first job posting!
+                  No applications yet.
                 </div>
               ) : (
-                jobsForDisplay.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    variant="employer"
-                    job={job}
-                    onEdit={handleEditJob}
-                    onDelete={handleDeleteJob}
+                applicantsForDisplay.map((applicant) => (
+                  <ApplicantCard
+                    key={applicant.id}
+                    applicant={applicant}
+                    onViewDetails={handleViewApplicant}
+                    onAccept={handleAcceptApplicant}
+                    onReject={handleRejectApplicant}
                   />
                 ))
               )}
             </div>
           </div>
         </div>
-
-        {/* Right Column - Applications Panel */}
-        <div className="lg:col-span-1">
-          <h2
-            className="text-sm font-bold uppercase mb-3 tracking-wide"
-            style={{ color: '#5a3851' }}
-          >
-            APPLICATION{applicantsForDisplay.length !== 1 ? 'S' : ''} ({applicantsForDisplay.length})
-          </h2>
-          <div className="space-y-4">
-            {applicantsForDisplay.length === 0 ? (
-              <div
-                className="rounded-xl p-6 text-center"
-                style={{ backgroundColor: '#f8eee7', color: '#94618e' }}
-              >
-                No applications yet.
-              </div>
-            ) : (
-              applicantsForDisplay.map((applicant) => (
-                <ApplicantCard
-                  key={applicant.id}
-                  applicant={applicant}
-                  onViewDetails={handleViewApplicant}
-                  onAccept={handleAcceptApplicant}
-                  onReject={handleRejectApplicant}
-                />
-              ))
-            )}
-          </div>
-        </div>
       </div>
-    </div>
+    </EmployerLayout>
+    
   )
 }

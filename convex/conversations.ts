@@ -7,15 +7,19 @@ export const list = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let q = ctx.db.query("conversations");
-
+    let messages;
     if (args.participantId) {
-      q = q.withIndex("by_participant", (idx) =>
-        idx.eq("participantId", args.participantId)
-      );
+      messages = await ctx.db
+        .query("conversations")
+        .withIndex("by_participant", (idx) =>
+          idx.eq("participantId", args.participantId)
+        )
+        .order("desc")
+        .collect();
+    } else {
+      messages = await ctx.db.query("conversations").order("desc").collect();
     }
 
-    const messages = await q.order("desc").collect();
     const limited = args.limit ? messages.slice(0, args.limit) : messages;
     return limited.reverse(); // Return in chronological order
   },
@@ -28,15 +32,23 @@ export const getRecent = query({
   },
   handler: async (ctx, args) => {
     const count = args.count ?? 10;
-    let q = ctx.db.query("conversations");
+    let messages;
 
     if (args.participantId) {
-      q = q.withIndex("by_participant", (idx) =>
-        idx.eq("participantId", args.participantId)
-      );
+      messages = await ctx.db
+        .query("conversations")
+        .withIndex("by_participant", (idx) =>
+          idx.eq("participantId", args.participantId)
+        )
+        .order("desc")
+        .take(count);
+    } else {
+      messages = await ctx.db
+        .query("conversations")
+        .order("desc")
+        .take(count);
     }
 
-    const messages = await q.order("desc").take(count);
     return messages.reverse();
   },
 });
@@ -55,18 +67,35 @@ export const add = mutation({
   },
 });
 
+export const getByParticipant = query({
+  args: { participantId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("conversations")
+      .withIndex("by_participant", (idx) =>
+        idx.eq("participantId", args.participantId)
+      )
+      .order("asc")
+      .collect();
+  },
+});
+
 export const clear = mutation({
   args: { participantId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    let q = ctx.db.query("conversations");
+    let messages;
 
     if (args.participantId) {
-      q = q.withIndex("by_participant", (idx) =>
-        idx.eq("participantId", args.participantId)
-      );
+      messages = await ctx.db
+        .query("conversations")
+        .withIndex("by_participant", (idx) =>
+          idx.eq("participantId", args.participantId)
+        )
+        .collect();
+    } else {
+      messages = await ctx.db.query("conversations").collect();
     }
 
-    const messages = await q.collect();
     for (const msg of messages) {
       await ctx.db.delete(msg._id);
     }
