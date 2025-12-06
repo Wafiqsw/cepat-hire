@@ -1,16 +1,7 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/client",
-  "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": null,
   "regions": ["sin1"],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
