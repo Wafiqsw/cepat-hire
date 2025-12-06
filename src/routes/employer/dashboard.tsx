@@ -1,102 +1,126 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { Button } from '../../components/Button'
 import { JobCard } from '../../components/JobCard'
 import { ApplicantCard } from '../../components/ApplicantCard'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/dashboard')({
   component: RouteComponent,
 })
 
+// Helper to format relative time
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now()
+  const diff = now - timestamp
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (days === 0) return 'Today'
+  if (days === 1) return '1 day ago'
+  if (days < 7) return `${days} days ago`
+  if (days < 14) return '1 week ago'
+  return `${Math.floor(days / 7)} weeks ago`
+}
+
+// Helper to format date
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
 function RouteComponent() {
-  // Placeholder data - will be replaced with backend data
-  const stats = {
-    activeJobs: 20,
-    applications: 5,
-    pending: 7,
-  }
+  // Fetch data from Convex
+  const stats = useQuery(api.applications.getStats)
+  const jobs = useQuery(api.jobs.list, { status: 'open' })
+  const applicationsWithDetails = useQuery(api.applications.listWithDetails)
 
-  // Mock data for demonstration - will be replaced with real data
-  const mockJobs = [
-    {
-      id: '1',
-      title: 'Senior Frontend Developer',
-      company: 'Tech Corp',
-      location: 'Kuala Lumpur',
-      type: 'Full-time',
-      salary: 'RM 8,000 - RM 12,000',
-      postedDate: '2 days ago',
-      description: 'Looking for an experienced frontend developer...',
-    },
-    {
-      id: '2',
-      title: 'Backend Engineer',
-      company: 'Innovation Labs',
-      location: 'Penang',
-      type: 'Full-time',
-      salary: 'RM 7,000 - RM 10,000',
-      postedDate: '5 days ago',
-      description: 'Join our backend team to build scalable APIs...',
-    },
-    {
-      id: '3',
-      title: 'UI/UX Designer',
-      company: 'Design Studio',
-      location: 'Remote',
-      type: 'Contract',
-      salary: 'RM 5,000 - RM 8,000',
-      postedDate: '1 week ago',
-      description: 'Create beautiful user experiences...',
-    },
-  ]
+  // Mutations
+  const deleteJob = useMutation(api.jobs.remove)
+  const updateApplicationStatus = useMutation(api.applications.updateStatus)
 
-  const mockApplicants = [
-    {
-      id: '1',
-      name: 'Ahmad Abdullah',
-      email: 'ahmad@example.com',
-      phone: '+60 12-345 6789',
-      location: 'Kuala Lumpur',
-      position: 'Senior Frontend Developer',
-      experience: '5 years experience',
-      appliedDate: 'Dec 5, 2025',
-      status: 'pending' as const,
-    },
-    {
-      id: '2',
-      name: 'Siti Nurhaliza',
-      email: 'siti@example.com',
-      phone: '+60 13-456 7890',
-      location: 'Selangor',
-      position: 'Backend Engineer',
-      experience: '3 years experience',
-      appliedDate: 'Dec 4, 2025',
-      status: 'reviewed' as const,
-    },
-  ]
+  // Transform jobs data for JobCard component
+  const jobsForDisplay = jobs?.map((job) => ({
+    id: job._id,
+    title: job.title,
+    company: job.company,
+    location: job.location || 'Remote',
+    type: job.type || 'Full-time',
+    salary: job.salary,
+    postedDate: formatRelativeTime(job.createdAt),
+    description: job.description,
+  })) || []
+
+  // Transform applications data for ApplicantCard component
+  const applicantsForDisplay = applicationsWithDetails?.map((app) => ({
+    id: app._id,
+    name: app.candidate?.name || 'Unknown',
+    email: app.candidate?.email || '',
+    phone: app.candidate?.phone || 'N/A',
+    location: app.candidate?.location || 'N/A',
+    position: app.job?.title || 'Unknown Position',
+    experience: app.candidate?.experience || 'Not specified',
+    appliedDate: formatDate(app.createdAt),
+    status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected',
+  })) || []
 
   const handleEditJob = (id: string) => {
     console.log('Edit job:', id)
-    // Will be implemented with backend
+    // TODO: Navigate to edit page
   }
 
-  const handleDeleteJob = (id: string) => {
-    console.log('Delete job:', id)
-    // Will be implemented with backend
+  const handleDeleteJob = async (id: string) => {
+    try {
+      await deleteJob({ id: id as Id<'jobs'> })
+    } catch (error) {
+      console.error('Failed to delete job:', error)
+    }
   }
 
   const handleViewApplicant = (id: string) => {
     console.log('View applicant:', id)
-    // Will be implemented with backend
+    // TODO: Navigate to applicant details
   }
 
-  const handleAcceptApplicant = (id: string) => {
-    console.log('Accept applicant:', id)
-    // Will be implemented with backend
+  const handleAcceptApplicant = async (id: string) => {
+    try {
+      await updateApplicationStatus({
+        id: id as Id<'applications'>,
+        status: 'shortlisted',
+      })
+    } catch (error) {
+      console.error('Failed to shortlist applicant:', error)
+    }
   }
 
-  const handleRejectApplicant = (id: string) => {
-    console.log('Reject applicant:', id)
-    // Will be implemented with backend
+  const handleRejectApplicant = async (id: string) => {
+    try {
+      await updateApplicationStatus({
+        id: id as Id<'applications'>,
+        status: 'rejected',
+      })
+    } catch (error) {
+      console.error('Failed to reject applicant:', error)
+    }
+  }
+
+  // Loading state
+  if (!stats || !jobs || !applicationsWithDetails) {
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
+          DASHBOARD
+        </h1>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+            Loading...
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -117,7 +141,7 @@ function RouteComponent() {
             {stats.activeJobs}
           </div>
           <div className="text-sm font-semibold text-white uppercase tracking-wide">
-            ACTIVE JOB
+            ACTIVE JOB{stats.activeJobs !== 1 ? 'S' : ''}
           </div>
         </div>
 
@@ -130,7 +154,7 @@ function RouteComponent() {
             {stats.applications}
           </div>
           <div className="text-sm font-semibold text-white uppercase tracking-wide">
-            APPLICATIONS
+            APPLICATION{stats.applications !== 1 ? 'S' : ''}
           </div>
         </div>
 
@@ -180,18 +204,27 @@ function RouteComponent() {
               className="text-sm font-bold uppercase mb-3 tracking-wide"
               style={{ color: '#5a3851' }}
             >
-              POSTED JOB
+              POSTED JOB{jobsForDisplay.length !== 1 ? 'S' : ''} ({jobsForDisplay.length})
             </h2>
             <div className="space-y-4">
-              {mockJobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  variant="employer"
-                  job={job}
-                  onEdit={handleEditJob}
-                  onDelete={handleDeleteJob}
-                />
-              ))}
+              {jobsForDisplay.length === 0 ? (
+                <div
+                  className="rounded-xl p-6 text-center"
+                  style={{ backgroundColor: '#f8eee7', color: '#94618e' }}
+                >
+                  No jobs posted yet. Create your first job posting!
+                </div>
+              ) : (
+                jobsForDisplay.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    variant="employer"
+                    job={job}
+                    onEdit={handleEditJob}
+                    onDelete={handleDeleteJob}
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -202,18 +235,27 @@ function RouteComponent() {
             className="text-sm font-bold uppercase mb-3 tracking-wide"
             style={{ color: '#5a3851' }}
           >
-            APPLICATIONS
+            APPLICATION{applicantsForDisplay.length !== 1 ? 'S' : ''} ({applicantsForDisplay.length})
           </h2>
           <div className="space-y-4">
-            {mockApplicants.map((applicant) => (
-              <ApplicantCard
-                key={applicant.id}
-                applicant={applicant}
-                onViewDetails={handleViewApplicant}
-                onAccept={handleAcceptApplicant}
-                onReject={handleRejectApplicant}
-              />
-            ))}
+            {applicantsForDisplay.length === 0 ? (
+              <div
+                className="rounded-xl p-6 text-center"
+                style={{ backgroundColor: '#f8eee7', color: '#94618e' }}
+              >
+                No applications yet.
+              </div>
+            ) : (
+              applicantsForDisplay.map((applicant) => (
+                <ApplicantCard
+                  key={applicant.id}
+                  applicant={applicant}
+                  onViewDetails={handleViewApplicant}
+                  onAccept={handleAcceptApplicant}
+                  onReject={handleRejectApplicant}
+                />
+              ))
+            )}
           </div>
         </div>
       </div>

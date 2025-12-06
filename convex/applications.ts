@@ -50,8 +50,8 @@ export const updateStatus = mutation({
     id: v.id("applications"),
     status: v.union(
       v.literal("pending"),
-      v.literal("reviewing"),
-      v.literal("accepted"),
+      v.literal("reviewed"),
+      v.literal("shortlisted"),
       v.literal("rejected")
     ),
     aiScore: v.optional(v.number()),
@@ -83,5 +83,43 @@ export const getWithDetails = query({
     const candidate = await ctx.db.get(application.candidateId);
 
     return { ...application, job, candidate };
+  },
+});
+
+// Get all applications with full job and candidate details (for dashboard)
+export const listWithDetails = query({
+  args: {},
+  handler: async (ctx) => {
+    const applications = await ctx.db.query("applications").collect();
+
+    const results = await Promise.all(
+      applications.map(async (app) => {
+        const job = await ctx.db.get(app.jobId);
+        const candidate = await ctx.db.get(app.candidateId);
+        return { ...app, job, candidate };
+      })
+    );
+
+    return results.filter((r) => r.job && r.candidate);
+  },
+});
+
+// Get dashboard stats
+export const getStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_status", (q) => q.eq("status", "open"))
+      .collect();
+
+    const applications = await ctx.db.query("applications").collect();
+    const pending = applications.filter((a) => a.status === "pending");
+
+    return {
+      activeJobs: jobs.length,
+      applications: applications.length,
+      pending: pending.length,
+    };
   },
 });
