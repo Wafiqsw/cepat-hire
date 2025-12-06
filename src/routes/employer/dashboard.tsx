@@ -7,6 +7,7 @@ import { ApplicantCard } from '../../components/ApplicantCard'
 import { Loading, Skeleton } from '../../components/Loading'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
 import { ArrowRight } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/dashboard')({
@@ -36,12 +37,19 @@ function formatDate(timestamp: number): string {
 }
 
 function RouteComponent() {
+  const { user } = useAuth()
   const navigate = useNavigate()
 
-  // Fetch data from Convex
-  const stats = useQuery(api.applications.getStats)
-  const jobs = useQuery(api.jobs.list, { status: 'open' })
-  const applicationsWithDetails = useQuery(api.applications.listWithDetails)
+  // Fetch data from Convex - filtered by employer
+  const stats = useQuery(api.applications.getStatsByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
+  const jobs = useQuery(api.jobs.listByEmployer,
+    user?.id ? { employerId: user.id as Id<"users">, status: 'open' } : "skip"
+  )
+  const applicationsWithDetails = useQuery(api.applications.listByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
 
   // Mutations
   const deleteJob = useMutation(api.jobs.remove)

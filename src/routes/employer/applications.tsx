@@ -7,6 +7,7 @@ import { ApplicantCard } from '../../components/ApplicantCard'
 import { AvatarPlaceholder } from '../../components/ImagePlaceholder'
 import { Loading, Skeleton } from '../../components/Loading'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { ChevronLeft, Star, Mail, Phone, MapPin, Briefcase } from 'lucide-react'
 import type { Id } from '../../../convex/_generated/dataModel'
 
@@ -27,10 +28,15 @@ function RouteComponent() {
   const [selectedJob, setSelectedJob] = useState<string | null>(null)
   const [selectedApplicant, setSelectedApplicant] = useState<any>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const { user } = useAuth()
 
-  // Fetch real data from Convex
-  const jobs = useQuery(api.jobs.list, {})
-  const applicationsWithDetails = useQuery(api.applications.listWithDetails)
+  // Fetch real data from Convex - filtered by employer
+  const jobs = useQuery(api.jobs.listByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
+  const applicationsWithDetails = useQuery(api.applications.listByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
 
   // Mutations
   const updateApplicationStatus = useMutation(api.applications.updateStatus)

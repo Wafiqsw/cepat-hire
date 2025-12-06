@@ -9,8 +9,18 @@ export const seedData = mutation({
       return { message: "Data already seeded" };
     }
 
-    // Create sample jobs
+    // Create a sample employer user (for linking jobs)
+    const employerId = await ctx.db.insert("users", {
+      name: "Test Employer",
+      email: "employer@test.com",
+      passwordHash: "$2a$10$test", // This is just seed data
+      role: "employer",
+      createdAt: Date.now(),
+    });
+
+    // Create sample jobs - linked to the employer
     const job1 = await ctx.db.insert("jobs", {
+      employerId,
       title: "Part-Time Barista",
       company: "Cafe Delight",
       description:
@@ -27,6 +37,7 @@ export const seedData = mutation({
     });
 
     const job2 = await ctx.db.insert("jobs", {
+      employerId,
       title: "Retail Sales Assistant",
       company: "Fashion Outlet",
       description:
@@ -43,6 +54,7 @@ export const seedData = mutation({
     });
 
     const job3 = await ctx.db.insert("jobs", {
+      employerId,
       title: "Food Delivery Rider",
       company: "Quick Eats",
       description:
@@ -60,6 +72,7 @@ export const seedData = mutation({
 
     // Additional jobs for variety
     const job4 = await ctx.db.insert("jobs", {
+      employerId,
       title: "Tutor - Mathematics",
       company: "Learning Center",
       description:
@@ -76,6 +89,7 @@ export const seedData = mutation({
     });
 
     const job5 = await ctx.db.insert("jobs", {
+      employerId,
       title: "Warehouse Packer",
       company: "Logistics Hub",
       description:
@@ -92,6 +106,7 @@ export const seedData = mutation({
     });
 
     const job6 = await ctx.db.insert("jobs", {
+      employerId,
       title: "Restaurant Server",
       company: "Family Dining",
       description:
@@ -309,6 +324,7 @@ export const seedData = mutation({
 
     return {
       message: "Seed data created successfully",
+      employers: 1,
       jobs: 6,
       candidates: 6,
       applications: 6,
@@ -321,7 +337,7 @@ export const seedData = mutation({
 export const clearAll = mutation({
   args: {},
   handler: async (ctx) => {
-    const tables = ["payments", "applications", "candidates", "jobs", "conversations"];
+    const tables = ["withdrawals", "savedJobs", "payments", "applications", "candidates", "jobs", "conversations", "sessions", "users"];
     for (const table of tables) {
       const docs = await ctx.db.query(table as any).collect();
       for (const doc of docs) {

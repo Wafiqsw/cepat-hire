@@ -1,301 +1,322 @@
-Welcome to your new TanStack app! 
+# README
 
-# Getting Started
+# CEPATHIRE
 
-To run this application:
+**Connect Talent with Opportunity**
+
+CEPATHIRE is an **AI-powered** job hiring platform that connects employers with talented job seekers. Leveraging cutting-edge agentic AI technology, CEPATHIRE revolutionizes the hiring process by enabling employers to create job postings through simple prompts and allowing job seekers to auto-apply to relevant positions with AI assistance.
+
+![CEPATHIRE](./src/logo.svg)
+
+CEPATHIRE
+
+## 🤖 AI-Powered Features
+
+### Agentic AI for Employers
+
+**Create Job Postings with Natural Language Prompts**
+
+Forget complex forms! Simply describe what you’re looking for, and our AI agent will:
+- Generate complete, professional job descriptions
+- Suggest appropriate salary ranges based on market data
+- Recommend required skills and qualifications
+- Format and structure the posting automatically
+
+**Example Prompt:**
+> “I need a part-time worker for my data entry project.”
+
+The AI instantly creates a comprehensive job posting ready to publish!
+
+### Agentic AI for Job Seekers
+
+**Auto-Apply to Jobs with AI Assistance**
+
+Our intelligent agent streamlines your job search:
+- **Smart Job Discovery** - AI analyzes your profile and suggests matching opportunities
+- **Automated Applications** - Simply prompt the AI to apply to jobs that match your criteria
+
+**Example Prompt:**
+> “Apply to all React developer positions in remote locations with salary above $100k”
+
+The AI finds matching jobs and submits applications on your behalf!
+
+## 🌟 Features
+
+### For Employers
+
+- **🤖 AI Job Posting Creation** - Create complete job postings using natural language prompts
+- **Post Jobs in Seconds** - No complex forms - just describe what you need
+- **AI-Generated Descriptions** - Professional job descriptions created automatically
+- **Find Top Talent** - Connect with skilled professionals ready to join your team
+- **Smart Matching** - AI-powered candidate matching algorithm
+- **Applicant Management** - Review and manage job applications efficiently
+
+### For Job Seekers
+
+- **🤖 AI Auto-Apply** - Apply to multiple jobs automatically with simple prompts
+- **AI Job Matching** - Get personalized job recommendations based on your profile
+- **Smart Job Discovery** - AI analyzes and suggests the best opportunities for you
+- **Automated Cover Letters** - AI generates tailored cover letters for each application
+- **Browse Jobs** - Search and filter through thousands of job opportunities
+- **Application Tracking** - Track all your AI-assisted and manual applications
+- **Save Jobs** - Bookmark interesting positions for later
+- **Profile Management** - Create and update your professional profile
+- **Work History** - Showcase your experience and skills
+
+### Platform Features
+
+- **Agentic AI Technology** - Advanced AI agents that understand and execute complex tasks
+- **Natural Language Processing** - Communicate with the platform using everyday language
+- **Secure Authentication** - Security for user data
+- **Real-time Updates** - Powered by Convex for real-time data synchronization
+- **Responsive Design** - Works seamlessly on desktop and mobile devices
+- **Modern UI** - Built with Tailwind CSS for a beautiful user experience
+- **Fast Performance** - Optimized with Vite and TanStack Router
+
+## 🚀 Tech Stack
+
+- **Frontend Framework**: React 19
+- **Routing**: TanStack Router (File-based routing)
+- **State Management**: TanStack Query (React Query)
+- **Backend**: Convex (Real-time database and backend)
+- **Styling**: Tailwind CSS 4
+- **Build Tool**: Vite
+- **Deployment**: Cloudflare Workers
+- **Language**: TypeScript
+- **Icons**: Lucide React
+- **Testing**: Vitest + Testing Library
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+- **Node.js** (v18 or higher)
+- **npm** (v9 or higher)
+
+## 🛠️ Installation
+
+1. **Clone the repository**
+    
+    ```bash
+    git clone <repository-url>cd cepat-hire
+    ```
+    
+2. **Install dependencies**
+    
+    ```bash
+    npm install
+    ```
+    
+3. **Set up environment variables**
+    
+    Create a `.env.local` file in the root directory and add your Convex configuration:
+    
+    ```
+    VITE_CONVEX_URL=your_convex_url_here
+    ```
+    
+4. **Start the development server**
+    
+    ```bash
+    npm run dev
+    ```
+    
+    The application will be available at `http://localhost:3000`
+    
+
+## 📦 Available Scripts
+
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start development server on port 3000 |
+| `npm run build` | Build for production |
+| `npm run serve` | Preview production build |
+| `npm test` | Run tests with Vitest |
+| `npm run lint` | Run ESLint |
+| `npm run format` | Run Prettier |
+| `npm run check` | Format and lint code |
+| `npm run deploy` | Deploy to Cloudflare Workers |
+
+## 🏗️ Project Structure
+
+```
+cepat-hire/
+├── src/
+│   ├── components/          # Reusable UI components
+│   │   ├── Button.tsx
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   ├── JobCard.tsx
+│   │   ├── Modal.tsx
+│   │   └── ...
+│   ├── layouts/             # Layout components
+│   │   └── StandardLayout.tsx
+│   ├── routes/              # File-based routing
+│   │   ├── index.tsx        # Landing page
+│   │   ├── home.tsx         # Main dashboard
+│   │   ├── auth/            # Authentication routes
+│   │   │   ├── login.tsx
+│   │   │   └── register.tsx
+│   │   ├── seeker/          # Job seeker routes
+│   │   │   ├── browse-jobs.tsx
+│   │   │   ├── applications.tsx
+│   │   │   ├── saved-jobs.tsx
+│   │   │   └── profile.tsx
+│   │   └── employer/        # Employer routes
+│   │       └── payments.tsx
+│   ├── data/                # Data utilities
+│   ├── router.tsx           # Router configuration
+│   └── styles.css           # Global styles
+├── convex/                  # Convex backend
+│   └── _generated/          # Auto-generated Convex files
+├── public/                  # Static assets
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── wrangler.jsonc          # Cloudflare Workers config
+```
+
+## 🎨 Styling
+
+This project uses **Tailwind CSS 4** for styling. The design system includes:
+- Custom color palette with brand colors
+- Responsive utilities for mobile-first design
+- Component-based styling approach
+- Smooth transitions and animations
+
+## 🔐 Authentication
+
+CEPATHIRE supports two types of user accounts:
+- **Job Seekers** - For individuals looking for employment
+- **Employers** - For companies posting job opportunities
+
+Authentication is handled securely with Convex backend integration.
+
+## 🗄️ Database
+
+The application uses **Convex** as its backend and database solution, providing:
+- Real-time data synchronization
+- Type-safe queries and mutations
+- Serverless architecture
+- Built-in authentication
+
+## 🧪 Testing
+
+Run tests using Vitest:
 
 ```bash
-npm install
-npm run start
+npm test
+```
+
+The project includes:
+- Unit tests for components
+- Integration tests for key features
+- Testing utilities from @testing-library/react
+
+## 🚢 Deployment
+
+### Cloudflare Workers
+
+Deploy to Cloudflare Workers:
+
+```bash
+npm run deploy
 ```
 
 # Building For Productions
 
-To build this application for production:
+Build for production:
 
 ```bash
 npm run build
 ```
 
-## Testing
+The optimized build will be in the `dist/` directory.
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## 🔧 Configuration Files
+
+- **vite.config.ts** - Vite configuration
+- **tsconfig.json** - TypeScript configuration
+- **eslint.config.js** - ESLint rules
+- **prettier.config.js** - Prettier formatting rules
+- **wrangler.jsonc** - Cloudflare Workers deployment config
+
+## 📱 Key Routes
+
+| Route | Description |
+| --- | --- |
+| `/` | Landing page with platform overview |
+| `/auth/login` | User login |
+| `/auth/register` | User registration |
+| `/home` | Main dashboard |
+| `/seeker/browse-jobs` | Browse available jobs |
+| `/seeker/applications` | View job applications |
+| `/seeker/saved-jobs` | Saved job listings |
+| `/seeker/profile` | Job seeker profile |
+| `/employer/payments` | Employer payment management |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 Code Quality
+
+This project maintains high code quality standards:
+
+- **ESLint** - Configured with TanStack ESLint config
+- **Prettier** - Consistent code formatting
+- **TypeScript** - Type safety throughout the codebase
+- **Testing** - Comprehensive test coverage with Vitest
+
+Run quality checks:
 
 ```bash
-npm run test
-```
-
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-
-## Linting & Formatting
-
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
-
-```bash
-npm run lint
-npm run format
 npm run check
 ```
 
+## 🐛 Troubleshooting
 
+### Port Already in Use
 
-## Routing
-This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
+If port 3000 is already in use, modify the dev script in `package.json`:
 
-### Adding A Route
-
-To add a new route to your application just add another a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
+```json
+"dev": "vite dev --port 3001"
 ```
 
-Then anywhere in your JSX you can use it like so:
+### Convex Connection Issues
 
-```tsx
-<Link to="/about">About</Link>
-```
+Ensure your `.env.local` file has the correct `VITE_CONVEX_URL` value from your Convex dashboard.
 
-This will create a link that will navigate to the `/about` route.
+### Build Errors
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-
-import { Link } from "@tanstack/react-router";
-
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <header>
-        <nav>
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
-        </nav>
-      </header>
-      <Outlet />
-      <TanStackRouterDevtools />
-    </>
-  ),
-})
-```
-
-The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-const peopleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/people",
-  loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
-    return response.json() as Promise<{
-      results: {
-        name: string;
-      }[];
-    }>;
-  },
-  component: () => {
-    const data = peopleRoute.useLoaderData();
-    return (
-      <ul>
-        {data.results.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    );
-  },
-});
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-### React-Query
-
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
-
-First add your dependencies:
+Clear the cache and reinstall dependencies:
 
 ```bash
-npm install @tanstack/react-query @tanstack/react-query-devtools
+rm -rf node_modules package-lock.json
+npm install
 ```
 
-Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
+## 📚 Learn More
 
-```tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+- [TanStack Router Documentation](https://tanstack.com/router)
+- [TanStack Query Documentation](https://tanstack.com/query)
+- [Convex Documentation](https://docs.convex.dev/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/)
+- [Vite Documentation](https://vitejs.dev/)
+- [React Documentation](https://react.dev/)
 
-// ...
+## 📄 License
 
-const queryClient = new QueryClient();
+This project is private and proprietary.
 
-// ...
+## 👥 Team
 
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
+Built by a talented team of full-stack developers dedicated to creating the best job hiring experience.
 
-  root.render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
-}
-```
+---
 
-You can also add TanStack Query Devtools to the root route (optional).
-
-```tsx
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-
-const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <ReactQueryDevtools buttonPosition="top-right" />
-      <TanStackRouterDevtools />
-    </>
-  ),
-});
-```
-
-Now you can use `useQuery` to fetch your data.
-
-```tsx
-import { useQuery } from "@tanstack/react-query";
-
-import "./App.css";
-
-function App() {
-  const { data } = useQuery({
-    queryKey: ["people"],
-    queryFn: () =>
-      fetch("https://swapi.dev/api/people")
-        .then((res) => res.json())
-        .then((data) => data.results as { name: string }[]),
-    initialData: [],
-  });
-
-  return (
-    <div>
-      <ul>
-        {data.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export default App;
-```
-
-You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
-
-## State Management
-
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
-
-First you need to add TanStack Store as a dependency:
-
-```bash
-npm install @tanstack/store
-```
-
-Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
-
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
-import "./App.css";
-
-const countStore = new Store(0);
-
-function App() {
-  const count = useStore(countStore);
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-    </div>
-  );
-}
-
-export default App;
-```
-
-One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
-
-Let's check this out by doubling the count using derived state.
-
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store, Derived } from "@tanstack/store";
-import "./App.css";
-
-const countStore = new Store(0);
-
-const doubledStore = new Derived({
-  fn: () => countStore.state * 2,
-  deps: [countStore],
-});
-doubledStore.mount();
-
-function App() {
-  const count = useStore(countStore);
-  const doubledCount = useStore(doubledStore);
-
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-      <div>Doubled - {doubledCount}</div>
-    </div>
-  );
-}
-
-export default App;
-```
-
-We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
-
-Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
-
-You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+**CEPATHIRE** - Making hiring fast, easy, and efficient. 🚀

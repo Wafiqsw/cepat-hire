@@ -1,8 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
 import { useState, useEffect } from 'react'
 import { AvatarPlaceholder, Button, Input, Loading, Skeleton } from '../../components'
+import { useAuth } from '../../contexts/AuthContext'
 import { ArrowLeft, Save } from 'lucide-react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/update-profile')({
   component: UpdateProfilePage,
@@ -17,21 +21,118 @@ function UpdateProfilePage() {
     const timer = setTimeout(() => setIsLoading(false), 1000)
     return () => clearTimeout(timer)
   }, [])
+  const { user } = useAuth()
+
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
+
+  // Fetch profile from backend
+  const profile = useQuery(api.seeker.getProfile,
+    candidateId ? { candidateId } : "skip"
+  )
+
+  // Update mutation
+  const updateProfile = useMutation(api.seeker.updateProfile)
 
   // Form state
   const [formData, setFormData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+60 12-345 6789',
-    location: 'Kuala Lumpur',
-    bio: 'Looking for part-time and gig work opportunities in KL area. Available on weekends and evenings.',
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    bio: '',
   })
+  const [isSaving, setIsSaving] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Initialize form with profile data
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || '',
+        email: profile.email || '',
+        phone: profile.phone || '',
+        location: profile.location || '',
+        bio: profile.resumeText || profile.experience || '',
+      })
+    }
+  }, [profile])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Saving profile:', formData)
-    // Here you would call your API to save the profile
-    navigate({ to: '/seeker/profile' })
+    if (!candidateId) return
+
+    setIsSaving(true)
+    try {
+      await updateProfile({
+        candidateId,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.location,
+        resumeText: formData.bio,
+      })
+      navigate({ to: '/seeker/profile' })
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Loading state - check candidate profile first
+  if (candidate === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Candidate profile doesn't exist - for update-profile this is okay,
+  // user can fill the form to create their profile
+  // But we need candidateId to save, so show a message
+  if (candidate === null) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: '#94618e' }}>
+              Welcome!
+            </h2>
+            <p className="text-lg mb-6" style={{ color: '#94618e', opacity: 0.7 }}>
+              Please contact support to set up your candidate profile.
+            </p>
+            <Button variant="primary" onClick={() => navigate({ to: '/seeker/browse-jobs' })}>
+              Browse Jobs
+            </Button>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Now candidateId is guaranteed to exist
+  if (profile === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
   }
 
   const handleCancel = () => {
@@ -220,15 +321,17 @@ function UpdateProfilePage() {
               type="submit"
               variant="primary"
               size="lg"
+              disabled={isSaving}
             >
               <Save size={20} />
-              Save Changes
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
             <Button
               type="button"
               variant="outline"
               size="lg"
               onClick={handleCancel}
+              disabled={isSaving}
             >
               Cancel
             </Button>
