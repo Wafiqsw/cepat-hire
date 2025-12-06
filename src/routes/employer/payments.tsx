@@ -1,8 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
 import { PaymentCard } from '../../components'
 import { Filter, Download, Search } from 'lucide-react'
 import { useState } from 'react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/payments')({
   component: EmployerPayments,
@@ -12,95 +15,35 @@ function EmployerPayments() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
-  // Sample payment data
-  const payments = [
-    {
-      id: '1',
-      amount: 5000.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: 'Dec 3, 2024',
-      description: 'Monthly salary payment for November 2024',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001234',
-      recipient: 'Ahmad Ibrahim',
-    },
-    {
-      id: '2',
-      amount: 3500.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: 'Dec 5, 2024',
-      description: 'Project milestone payment',
-      paymentMethod: 'Online Banking',
-      transactionId: 'TXN-2024-001235',
-      recipient: 'Siti Nurhaliza',
-    },
-    {
-      id: '3',
-      amount: 1200.50,
-      currency: 'RM',
-      status: 'ongoing' as const,
-      date: 'Dec 6, 2024',
-      description: 'Freelance work payment - Website design',
-      paymentMethod: 'E-Wallet',
-      recipient: 'Lee Wei Ming',
-    },
-    {
-      id: '4',
-      amount: 2800.00,
-      currency: 'RM',
-      status: 'cancelled' as const,
-      date: 'Nov 28, 2024',
-      description: 'Payment cancelled due to contract termination',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001180',
-      recipient: 'John Doe',
-    },
-    {
-      id: '5',
-      amount: 7500.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: 'Dec 1, 2024',
-      description: 'Consultation fee for December',
-      paymentMethod: 'Credit Card',
-      transactionId: 'TXN-2024-001200',
-      recipient: 'Tech Solutions Ltd.',
-    },
-    {
-      id: '6',
-      amount: 4200.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: 'Nov 25, 2024',
-      description: 'Full-stack development project',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001150',
-      recipient: 'Maria Garcia',
-    },
-    {
-      id: '7',
-      amount: 1800.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: 'Dec 7, 2024',
-      description: 'UI/UX design consultation',
-      paymentMethod: 'E-Wallet',
-      recipient: 'David Chen',
-    },
-    {
-      id: '8',
-      amount: 6500.00,
-      currency: 'RM',
-      status: 'ongoing' as const,
-      date: 'Dec 4, 2024',
-      description: 'Mobile app development - Phase 2',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001220',
-      recipient: 'Sarah Johnson',
-    },
-  ]
+  // Fetch real data from Convex
+  const paymentsWithDetails = useQuery(api.payments.listWithDetails)
+  const stats = useQuery(api.payments.getStats)
+
+  // Mutations
+  const updatePaymentStatus = useMutation(api.payments.updateStatus)
+
+  // Transform payments data for display
+  const payments = paymentsWithDetails?.map((payment) => ({
+    id: payment._id,
+    amount: payment.amount,
+    currency: payment.currency,
+    status: payment.status as 'completed' | 'pending' | 'ongoing' | 'cancelled',
+    date: payment.dateRange,
+    description: payment.description,
+    paymentMethod: payment.paymentMethod,
+    transactionId: payment.transactionId,
+    recipient: payment.candidate?.name || 'Unknown',
+    job: payment.job ? {
+      id: payment.job._id,
+      title: payment.job.title,
+      company: payment.job.company,
+      location: payment.job.location || 'Location not specified',
+      type: payment.job.type || 'Part-time',
+      salary: payment.job.salary || 'Salary not specified',
+      description: payment.job.description,
+      image: payment.job.image || '',
+    } : undefined,
+  })) || []
 
   const filteredPayments = payments.filter(payment => {
     const matchesSearch = payment.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -109,11 +52,53 @@ function EmployerPayments() {
     return matchesSearch && matchesStatus
   })
 
-  const stats = {
-    total: payments.reduce((sum, p) => sum + p.amount, 0),
-    completed: payments.filter(p => p.status === 'completed').length,
-    pending: payments.filter(p => p.status === 'pending').length,
-    ongoing: payments.filter(p => p.status === 'ongoing').length,
+  const displayStats = {
+    total: stats?.total || 0,
+    completed: stats?.completed || 0,
+    pending: stats?.pending || 0,
+    totalPayments: stats?.totalPayments || 0,
+  }
+
+  // Handlers
+  const handleApprovePayment = async (id: string) => {
+    try {
+      await updatePaymentStatus({
+        id: id as Id<'payments'>,
+        status: 'completed',
+        transactionId: `TXN-${Date.now()}`,
+      })
+    } catch (error) {
+      console.error('Failed to approve payment:', error)
+    }
+  }
+
+  const handleRejectPayment = async (id: string) => {
+    try {
+      await updatePaymentStatus({
+        id: id as Id<'payments'>,
+        status: 'cancelled',
+      })
+    } catch (error) {
+      console.error('Failed to reject payment:', error)
+    }
+  }
+
+  // Loading state
+  if (paymentsWithDetails === undefined || stats === undefined) {
+    return (
+      <EmployerLayout>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
+            Payment Management
+          </h1>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </EmployerLayout>
+    )
   }
 
   return (
@@ -136,7 +121,7 @@ function EmployerPayments() {
               Total Paid
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#94618e' }}>
-              RM {stats.total.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
+              RM {displayStats.total.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
             </h3>
           </div>
           <div className="p-6 rounded-xl border-2" style={{ backgroundColor: '#f8eee7', borderColor: '#3b82f6' }}>
@@ -144,7 +129,7 @@ function EmployerPayments() {
               Completed
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#3b82f6' }}>
-              {stats.completed}
+              {displayStats.completed}
             </h3>
           </div>
           <div className="p-6 rounded-xl border-2" style={{ backgroundColor: '#f8eee7', borderColor: '#fbbf24' }}>
@@ -152,15 +137,15 @@ function EmployerPayments() {
               Pending
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#d97706' }}>
-              {stats.pending}
+              {displayStats.pending}
             </h3>
           </div>
           <div className="p-6 rounded-xl border-2" style={{ backgroundColor: '#f8eee7', borderColor: '#4ade80' }}>
             <p className="text-sm mb-2" style={{ color: '#16a34a', opacity: 0.9 }}>
-              Ongoing
+              Total Payments
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#16a34a' }}>
-              {stats.ongoing}
+              {displayStats.totalPayments}
             </h3>
           </div>
         </div>
@@ -229,6 +214,8 @@ function EmployerPayments() {
                 payment={payment}
                 onViewDetails={(id) => console.log('View payment details:', id)}
                 onDownloadReceipt={(id) => console.log('Download receipt:', id)}
+                onApprovePayment={handleApprovePayment}
+                onRejectPayment={handleRejectPayment}
               />
             ))
           ) : (

@@ -10,9 +10,11 @@
     "lint": "eslint",
     "format": "prettier",
     "check": "prettier --write . && eslint --fix",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "agent": "npx tsx scripts/agent.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@cloudflare/vite-plugin": "^1.13.8",
     "@convex-dev/react-query": "^0.1.0",
     "@tailwindcss/vite": "^4.0.6",
@@ -25,6 +27,7 @@
     "@tanstack/react-start": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
     "convex": "^1.30.0",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.544.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

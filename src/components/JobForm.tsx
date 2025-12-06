@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input, Checkbox } from './Input'
 import { Button } from './Button'
 import { Modal } from './Modal'
+import { ImagePlaceholder } from './ImagePlaceholder'
 import { X } from 'lucide-react'
 
 interface JobFormData {
@@ -15,6 +16,7 @@ interface JobFormData {
   benefits: string
   isRemote: boolean
   isActive: boolean
+  image?: string
 }
 
 interface JobFormProps {
@@ -43,9 +45,32 @@ export const JobForm = ({
     benefits: initialData?.benefits || '',
     isRemote: initialData?.isRemote || false,
     isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
+    image: initialData?.image || '',
   })
 
   const [errors, setErrors] = useState<Partial<Record<keyof JobFormData, string>>>({})
+  const [imagePreview, setImagePreview] = useState<string>(initialData?.image || '')
+
+  // Reset form when modal opens or initialData changes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        title: initialData?.title || '',
+        company: initialData?.company || '',
+        location: initialData?.location || '',
+        type: initialData?.type || '',
+        salary: initialData?.salary || '',
+        description: initialData?.description || '',
+        requirements: initialData?.requirements || '',
+        benefits: initialData?.benefits || '',
+        isRemote: initialData?.isRemote || false,
+        isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
+        image: initialData?.image || '',
+      })
+      setImagePreview(initialData?.image || '')
+      setErrors({})
+    }
+  }, [isOpen, initialData])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof JobFormData, string>> = {}
@@ -127,6 +152,58 @@ export const JobForm = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-8 py-6 max-h-[70vh] overflow-y-auto">
           <div className="space-y-5">
+            {/* Job Image Upload */}
+            <div>
+              <label className="block text-sm font-semibold mb-3" style={{ color: '#94618e' }}>
+                Job Image
+              </label>
+              <div className="flex flex-col gap-3">
+                <ImagePlaceholder
+                  shape="rectangle"
+                  size="xl"
+                  src={imagePreview}
+                  text="Drop image here or click to upload"
+                  uploadable={true}
+                  onUpload={(file) => {
+                    const reader = new FileReader()
+                    reader.onloadend = () => {
+                      const result = reader.result as string
+                      setImagePreview(result)
+                      handleChange('image', result)
+                    }
+                    reader.readAsDataURL(file)
+                  }}
+                />
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-px" style={{ backgroundColor: '#94618e', opacity: 0.3 }} />
+                  <span className="text-xs" style={{ color: '#94618e', opacity: 0.6 }}>OR</span>
+                  <div className="flex-1 h-px" style={{ backgroundColor: '#94618e', opacity: 0.3 }} />
+                </div>
+                <Input
+                  placeholder="Paste image URL here (e.g., https://example.com/image.jpg)"
+                  value={formData.image}
+                  onChange={(e) => {
+                    handleChange('image', e.target.value)
+                    setImagePreview(e.target.value)
+                  }}
+                  fullWidth
+                />
+                {imagePreview && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setImagePreview('')
+                      handleChange('image', '')
+                    }}
+                  >
+                    Remove Image
+                  </Button>
+                )}
+              </div>
+            </div>
+
             {/* Job Title */}
             <Input
               label="Job Title *"

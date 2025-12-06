@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
+import { FloatingChatButton } from '../components/AIChat'
 import {
   LayoutDashboard,
   Briefcase,
@@ -100,6 +101,9 @@ export const EmployerLayout = ({ children }: EmployerLayoutProps) => {
       </div>
 
       <Footer />
+
+      {/* AI Chat Assistant */}
+      <FloatingChatButton />
     </div>
   )
 }
