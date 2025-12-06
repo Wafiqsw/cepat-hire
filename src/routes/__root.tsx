@@ -42,13 +42,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-<<<<<<< HEAD
         
         {children}
         
-=======
-        {children}
->>>>>>> origin/screens/onboarding
         <TanStackDevtools
           config={{
             position: 'bottom-right',
