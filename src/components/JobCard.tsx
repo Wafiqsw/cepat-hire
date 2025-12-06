@@ -33,6 +33,7 @@ interface JobCardProps {
   onDelete?: (id: string) => void
   onApply?: (id: string) => void
   onSave?: (id: string) => void
+  onViewDetails?: (id: string) => void
 }
 
 export const JobCard = ({
@@ -42,9 +43,11 @@ export const JobCard = ({
   onDelete,
   onApply,
   onSave,
+  onViewDetails,
 }: JobCardProps) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showApplyModal, setShowApplyModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
 
   const handleDelete = () => {
@@ -55,11 +58,16 @@ export const JobCard = ({
   const handleApply = () => {
     onApply?.(job.id)
     setShowApplyModal(false)
+    setShowSuccessModal(true)
   }
 
   const handleSave = () => {
     setIsSaved(!isSaved)
     onSave?.(job.id)
+  }
+
+  const handleViewDetails = () => {
+    onViewDetails?.(job.id)
   }
 
   return (
@@ -307,6 +315,33 @@ export const JobCard = ({
           </ModalActions>
         </Modal>
       )}
+
+      {/* Success Modal */}
+      {variant === 'seeker' && (
+        <Modal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          variant="success"
+          title="Application Submitted!"
+        >
+          <p className="mb-6 text-base" style={{ color: '#94618e', opacity: 0.9 }}>
+            Your application for the <strong>{job.title}</strong> position at{' '}
+            <strong>{job.company}</strong> has been successfully submitted. The employer will review your profile and contact you if you're a good fit.
+          </p>
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="px-8 py-2.5 rounded-full font-bold text-base transition-all hover:opacity-90"
+              style={{
+                backgroundColor: '#94618e',
+                color: '#f8eee7',
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </Modal>
+      )}
     </>
   )
 }
@@ -319,6 +354,7 @@ interface JobListProps {
   onDelete?: (id: string) => void
   onApply?: (id: string) => void
   onSave?: (id: string) => void
+  onViewDetails?: (id: string) => void
 }
 
 export const JobList = ({
@@ -328,6 +364,7 @@ export const JobList = ({
   onDelete,
   onApply,
   onSave,
+  onViewDetails,
 }: JobListProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -340,6 +377,7 @@ export const JobList = ({
           onDelete={onDelete}
           onApply={onApply}
           onSave={onSave}
+          onViewDetails={onViewDetails}
         />
       ))}
     </div>

@@ -1,7 +1,8 @@
+import { Calendar, CreditCard } from 'lucide-react'
 import { useState } from 'react'
 import { Download, Eye, X, User, Calendar, CreditCard, FileText, DollarSign, Clock } from 'lucide-react'
 
-type PaymentStatus = 'ongoing' | 'completed' | 'pending' | 'cancelled'
+type PaymentStatus = 'completed' | 'pending' | 'cancelled'
 
 interface JobData {
   id: string
@@ -38,25 +39,23 @@ interface PaymentCardProps {
 
 const getStatusStyles = (status: PaymentStatus) => {
   const statusStyles = {
-    ongoing: {
-      backgroundColor: '#4ade80',
-      color: '#ffffff',
-      text: 'ONGOING',
-    },
     completed: {
-      backgroundColor: '#3b82f6',
-      color: '#ffffff',
-      text: 'COMPLETED',
+      backgroundColor: '#d1fae5',
+      borderColor: '#10b981',
+      textColor: '#059669',
+      text: 'Completed',
     },
     pending: {
-      backgroundColor: '#fbbf24',
-      color: '#ffffff',
-      text: 'PENDING',
+      backgroundColor: '#fef3c7',
+      borderColor: '#f59e0b',
+      textColor: '#d97706',
+      text: 'Pending',
     },
     cancelled: {
-      backgroundColor: '#ef4444',
-      color: '#ffffff',
-      text: 'CANCELLED',
+      backgroundColor: '#fee2e2',
+      borderColor: '#ef4444',
+      textColor: '#dc2626',
+      text: 'Cancelled',
     },
   }
   return statusStyles[status]
@@ -64,6 +63,8 @@ const getStatusStyles = (status: PaymentStatus) => {
 
 export const PaymentCard = ({
   payment,
+  className = '',
+}: PaymentCardProps) => {
   onViewDetails,
   onDownloadReceipt,
   onApprovePayment,
