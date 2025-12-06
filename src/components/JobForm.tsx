@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input, Checkbox } from './Input'
 import { Button } from './Button'
 import { Modal } from './Modal'
@@ -50,6 +50,27 @@ export const JobForm = ({
 
   const [errors, setErrors] = useState<Partial<Record<keyof JobFormData, string>>>({})
   const [imagePreview, setImagePreview] = useState<string>(initialData?.image || '')
+
+  // Reset form when modal opens or initialData changes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        title: initialData?.title || '',
+        company: initialData?.company || '',
+        location: initialData?.location || '',
+        type: initialData?.type || '',
+        salary: initialData?.salary || '',
+        description: initialData?.description || '',
+        requirements: initialData?.requirements || '',
+        benefits: initialData?.benefits || '',
+        isRemote: initialData?.isRemote || false,
+        isActive: initialData?.isActive !== undefined ? initialData.isActive : true,
+        image: initialData?.image || '',
+      })
+      setImagePreview(initialData?.image || '')
+      setErrors({})
+    }
+  }, [isOpen, initialData])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof JobFormData, string>> = {}
