@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { Briefcase, Wallet, Bookmark, User, TrendingUp, Clock } from 'lucide-react'
 import { Button } from '../../components'
 import type { Id } from '../../../convex/_generated/dataModel'
@@ -10,15 +11,15 @@ export const Route = createFileRoute('/seeker/dashboard')({
   component: DashboardPage,
 })
 
-// TODO: Replace with actual authenticated candidate ID
-const MOCK_CANDIDATE_ID = "jn7e1p2s8t9r7ewxvb8x7s5z4h6z9rf5" as Id<"candidates">
-
 function DashboardPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
 
-  // Fetch data from Convex
-  const candidates = useQuery(api.candidates.list, {})
-  const candidateId = candidates?.[0]?._id
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
 
   const dashboardStats = useQuery(api.seeker.getDashboardStats,
     candidateId ? { candidateId } : "skip"
@@ -70,7 +71,43 @@ function DashboardPage() {
     return colors[status as keyof typeof colors] || '#94618e'
   }
 
-  // Loading state
+  // Loading state - check candidate profile first
+  if (candidate === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Candidate profile doesn't exist
+  if (candidate === null) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: '#94618e' }}>
+              Profile Not Found
+            </h2>
+            <p className="text-lg mb-6" style={{ color: '#94618e', opacity: 0.7 }}>
+              Please complete your profile to access the dashboard.
+            </p>
+            <Button variant="primary" onClick={() => navigate({ to: '/seeker/update-profile' })}>
+              Create Profile
+            </Button>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Now candidateId is guaranteed to exist, show loading for dependent queries
   if (dashboardStats === undefined) {
     return (
       <SeekerLayout>

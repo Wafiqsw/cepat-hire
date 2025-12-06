@@ -1,10 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { PaymentCard, Modal, ModalActions, Button } from '../../components'
 import { Wallet, Clock, CheckCircle, AlertCircle, Filter, Building2 } from 'lucide-react'
 import { useState } from 'react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/payments')({
   component: SeekerPayments,
@@ -15,10 +17,17 @@ function SeekerPayments() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [accountNumber, setAccountNumber] = useState('')
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
+  const { user } = useAuth()
 
-  // Get candidate ID
-  const candidates = useQuery(api.candidates.list, {})
-  const candidateId = candidates?.[0]?._id
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
+
+  // Withdrawal mutation
+  const requestWithdrawal = useMutation(api.seeker.requestWithdrawal)
 
   // Fetch payments and stats from backend
   const paymentsData = useQuery(api.seeker.getMyPayments,
@@ -59,7 +68,40 @@ function SeekerPayments() {
   const pendingEarnings = paymentStats?.pendingEarnings || 0
   const availableToWithdraw = paymentStats?.availableToWithdraw || 0
 
-  // Loading state
+  // Loading state - check candidate profile first
+  if (candidate === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Candidate profile doesn't exist
+  if (candidate === null) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: '#94618e' }}>
+              Profile Not Found
+            </h2>
+            <p className="text-lg mb-6" style={{ color: '#94618e', opacity: 0.7 }}>
+              Please create your profile to view your wallet.
+            </p>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Now candidateId is guaranteed to exist
   if (paymentsData === undefined || paymentStats === undefined) {
     return (
       <SeekerLayout>
@@ -329,18 +371,29 @@ function SeekerPayments() {
               </Button>
               <Button
                 variant="primary"
-                onClick={() => {
-                  if (selectedBank && accountNumber.length >= 10) {
-                    console.log('Withdraw to:', selectedBank, accountNumber)
-                    setShowWithdrawModal(false)
-                    setSelectedBank(null)
-                    setAccountNumber('')
-                    // Here you would call your withdrawal API
+                onClick={async () => {
+                  if (selectedBank && accountNumber.length >= 10 && candidateId && availableToWithdraw > 0) {
+                    setIsWithdrawing(true)
+                    try {
+                      await requestWithdrawal({
+                        candidateId,
+                        amount: availableToWithdraw,
+                        bankName: selectedBank,
+                        accountNumber,
+                      })
+                      setShowWithdrawModal(false)
+                      setSelectedBank(null)
+                      setAccountNumber('')
+                    } catch (error) {
+                      console.error('Withdrawal failed:', error)
+                    } finally {
+                      setIsWithdrawing(false)
+                    }
                   }
                 }}
-                disabled={!selectedBank || accountNumber.length < 10}
+                disabled={!selectedBank || accountNumber.length < 10 || isWithdrawing || !candidateId}
               >
-                Confirm Withdrawal
+                {isWithdrawing ? 'Processing...' : 'Confirm Withdrawal'}
               </Button>
             </ModalActions>
           </div>

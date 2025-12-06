@@ -6,6 +6,7 @@ import { Button } from '../../components/Button'
 import { JobForm } from '../../components/JobForm'
 import { Plus } from 'lucide-react'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/joblist')({
@@ -42,9 +43,12 @@ interface JobFormData {
 function RouteComponent() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingJob, setEditingJob] = useState<any>(null)
+  const { user } = useAuth()
 
-  // Fetch jobs from Convex
-  const jobs = useQuery(api.jobs.list, {})
+  // Fetch jobs from Convex - filtered by employer
+  const jobs = useQuery(api.jobs.listByEmployer,
+    user?.id ? { employerId: user.id as Id<"users"> } : "skip"
+  )
 
   // Mutations
   const createJob = useMutation(api.jobs.create)
@@ -111,8 +115,9 @@ function RouteComponent() {
           status: data.isActive ? 'open' : 'draft',
         })
       } else {
-        // Create new job
+        // Create new job - include employerId to link to this employer
         await createJob({
+          employerId: user?.id as Id<"users">,
           title: data.title,
           company: data.company,
           location: data.location || undefined,

@@ -2,8 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { useState } from 'react'
 import { Filter, Briefcase, MapPin, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/applications')({
   component: ApplicationsPage,
@@ -25,10 +27,13 @@ interface Application {
 
 function ApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const { user } = useAuth()
 
-  // Fetch real data from Convex
-  const candidates = useQuery(api.candidates.list, {})
-  const candidateId = candidates?.[0]?._id
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
 
   const applicationsData = useQuery(api.seeker.getMyApplications,
     candidateId ? { candidateId } : "skip"

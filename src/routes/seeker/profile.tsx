@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import {
   WorkHistoryList,
   WalletCard,
@@ -9,6 +10,7 @@ import {
   AvatarPlaceholder,
 } from '../../components'
 import { Mail, Phone, MapPin, Calendar, Edit, Briefcase } from 'lucide-react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/profile')({
   component: ProfilePage,
@@ -16,10 +18,13 @@ export const Route = createFileRoute('/seeker/profile')({
 
 function ProfilePage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
 
-  // Get candidate ID
-  const candidates = useQuery(api.candidates.list, {})
-  const candidateId = candidates?.[0]?._id
+  // Get candidate profile linked to authenticated user
+  const candidate = useQuery(api.seeker.getCandidateByUserId,
+    user?.id ? { userId: user.id as Id<"users"> } : "skip"
+  )
+  const candidateId = candidate?._id
 
   // Fetch profile, work history and payment stats from backend
   const profile = useQuery(api.seeker.getProfile,
@@ -66,7 +71,43 @@ function ProfilePage() {
   // Wallet balance from payment stats
   const walletBalance = paymentStats?.totalEarnings || 0
 
-  // Loading state
+  // Loading state - check candidate profile first
+  if (candidate === undefined) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto space-y-8 px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Candidate profile doesn't exist
+  if (candidate === null) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto space-y-8 px-4 py-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: '#94618e' }}>
+              Profile Not Found
+            </h2>
+            <p className="text-lg mb-6" style={{ color: '#94618e', opacity: 0.7 }}>
+              Please create your profile to get started.
+            </p>
+            <Button variant="primary" onClick={() => navigate({ to: '/seeker/update-profile' })}>
+              Create Profile
+            </Button>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
+  // Now candidateId is guaranteed to exist
   if (profile === undefined || workHistoryData === undefined) {
     return (
       <SeekerLayout>

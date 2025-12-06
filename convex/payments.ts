@@ -134,3 +134,61 @@ export const getStats = query({
     };
   },
 });
+
+// List payments for jobs belonging to specific employer
+export const listByEmployer = query({
+  args: { employerId: v.id("users") },
+  handler: async (ctx, args) => {
+    // Get employer's jobs first
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_employer", (q) => q.eq("employerId", args.employerId))
+      .collect();
+    const jobIds = new Set(jobs.map((j) => j._id));
+
+    // Get all payments and filter by employer's jobs
+    const payments = await ctx.db.query("payments").collect();
+    const filtered = payments.filter((p) => jobIds.has(p.jobId));
+
+    // Add job and candidate details
+    const results = await Promise.all(
+      filtered.map(async (payment) => {
+        const job = await ctx.db.get(payment.jobId);
+        const candidate = await ctx.db.get(payment.candidateId);
+        return { ...payment, job, candidate };
+      })
+    );
+
+    return results.filter((r) => r.job && r.candidate);
+  },
+});
+
+// Get payment stats for specific employer only
+export const getStatsByEmployer = query({
+  args: { employerId: v.id("users") },
+  handler: async (ctx, args) => {
+    // Get employer's jobs
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_employer", (q) => q.eq("employerId", args.employerId))
+      .collect();
+    const jobIds = new Set(jobs.map((j) => j._id));
+
+    // Get payments for employer's jobs only
+    const allPayments = await ctx.db.query("payments").collect();
+    const payments = allPayments.filter((p) => jobIds.has(p.jobId));
+
+    const total = payments.reduce((sum, p) => sum + p.amount, 0);
+    const completed = payments.filter((p) => p.status === "completed").length;
+    const pending = payments.filter((p) => p.status === "pending").length;
+    const ongoing = payments.filter((p) => p.status === "ongoing").length;
+
+    return {
+      total,
+      completed,
+      pending,
+      ongoing,
+      totalPayments: payments.length,
+    };
+  },
+});

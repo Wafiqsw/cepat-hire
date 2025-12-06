@@ -21,6 +21,7 @@ export default defineSchema({
 
   // Job tables
   jobs: defineTable({
+    employerId: v.optional(v.id("users")), // Link to employer who created the job
     title: v.string(),
     company: v.string(),
     description: v.string(),
@@ -33,9 +34,12 @@ export default defineSchema({
     isRemote: v.optional(v.boolean()),
     status: v.union(v.literal("open"), v.literal("closed"), v.literal("draft")),
     createdAt: v.number(),
-  }).index("by_status", ["status"]),
+  })
+    .index("by_employer", ["employerId"])
+    .index("by_status", ["status"]),
 
   candidates: defineTable({
+    userId: v.optional(v.id("users")), // Link to authenticated user
     name: v.string(),
     email: v.string(),
     phone: v.optional(v.string()),
@@ -52,6 +56,7 @@ export default defineSchema({
     ),
     createdAt: v.number(),
   })
+    .index("by_user", ["userId"])
     .index("by_email", ["email"])
     .index("by_status", ["status"]),
 
@@ -107,4 +112,18 @@ export default defineSchema({
     .index("by_candidate", ["candidateId"])
     .index("by_job", ["jobId"])
     .index("by_candidate_job", ["candidateId", "jobId"]),
+
+  withdrawals: defineTable({
+    candidateId: v.id("candidates"),
+    amount: v.number(),
+    bankName: v.string(),
+    accountNumber: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("completed"),
+      v.literal("rejected")
+    ),
+    createdAt: v.number(),
+  }).index("by_candidate", ["candidateId"]),
 });

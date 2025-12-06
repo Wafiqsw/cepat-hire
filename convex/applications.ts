@@ -123,3 +123,57 @@ export const getStats = query({
     };
   },
 });
+
+// List applications for jobs belonging to specific employer
+export const listByEmployer = query({
+  args: { employerId: v.id("users") },
+  handler: async (ctx, args) => {
+    // Get employer's jobs first
+    const jobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_employer", (q) => q.eq("employerId", args.employerId))
+      .collect();
+    const jobIds = new Set(jobs.map((j) => j._id));
+
+    // Get all applications and filter by employer's jobs
+    const applications = await ctx.db.query("applications").collect();
+    const filtered = applications.filter((a) => jobIds.has(a.jobId));
+
+    // Add job and candidate details
+    const results = await Promise.all(
+      filtered.map(async (app) => {
+        const job = await ctx.db.get(app.jobId);
+        const candidate = await ctx.db.get(app.candidateId);
+        return { ...app, job, candidate };
+      })
+    );
+
+    return results.filter((r) => r.job && r.candidate);
+  },
+});
+
+// Get stats for specific employer only
+export const getStatsByEmployer = query({
+  args: { employerId: v.id("users") },
+  handler: async (ctx, args) => {
+    // Get employer's jobs
+    const allJobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_employer", (q) => q.eq("employerId", args.employerId))
+      .collect();
+
+    const activeJobs = allJobs.filter((j) => j.status === "open");
+    const jobIds = new Set(allJobs.map((j) => j._id));
+
+    // Get applications for employer's jobs only
+    const allApplications = await ctx.db.query("applications").collect();
+    const applications = allApplications.filter((a) => jobIds.has(a.jobId));
+    const pending = applications.filter((a) => a.status === "pending");
+
+    return {
+      activeJobs: activeJobs.length,
+      applications: applications.length,
+      pending: pending.length,
+    };
+  },
+});

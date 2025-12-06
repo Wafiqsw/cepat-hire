@@ -1,6 +1,55 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
+// ==================== GET CANDIDATE BY USER ID ====================
+
+export const getCandidateByUserId = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("candidates")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .first();
+  },
+});
+
+// ==================== WITHDRAWALS ====================
+
+export const requestWithdrawal = mutation({
+  args: {
+    candidateId: v.id("candidates"),
+    amount: v.number(),
+    bankName: v.string(),
+    accountNumber: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate amount is positive
+    if (args.amount <= 0) {
+      throw new Error("Withdrawal amount must be positive");
+    }
+
+    return await ctx.db.insert("withdrawals", {
+      candidateId: args.candidateId,
+      amount: args.amount,
+      bankName: args.bankName,
+      accountNumber: args.accountNumber,
+      status: "pending",
+      createdAt: Date.now(),
+    });
+  },
+});
+
+export const getWithdrawals = query({
+  args: { candidateId: v.id("candidates") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("withdrawals")
+      .withIndex("by_candidate", (q) => q.eq("candidateId", args.candidateId))
+      .order("desc")
+      .collect();
+  },
+});
+
 // ==================== SAVED JOBS ====================
 
 export const getSavedJobs = query({

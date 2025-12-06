@@ -696,9 +696,21 @@ export const seekerChat = action({
     message: v.string(),
     conversationId: v.string(),
     candidateId: v.id("candidates"),
-    actionType: v.optional(v.union(v.literal("list-jobs"), v.literal("auto-apply"))),
+    actionType: v.optional(v.union(v.literal("search"), v.literal("apply-selected"))),
+    selectedJobIds: v.optional(v.array(v.string())),
   },
-  handler: async (ctx, args): Promise<{ response: string; appliedJobs?: string[] }> => {
+  handler: async (ctx, args): Promise<{
+    response: string;
+    appliedJobs?: string[];
+    matchingJobs?: Array<{
+      id: string;
+      title: string;
+      company: string;
+      location: string;
+      salary: string;
+      type: string;
+    }>;
+  }> => {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       throw new Error("ANTHROPIC_API_KEY not configured");
@@ -725,21 +737,106 @@ export const seekerChat = action({
       content: h.content,
     }));
 
-    const systemPrompt = args.actionType === "auto-apply"
-      ? `You are a helpful AI assistant for a job seeker using Cepat Hire. The user wants you to AUTO-APPLY to matching jobs.
+    // Handle apply-selected action directly without AI
+    if (args.actionType === "apply-selected" && args.selectedJobIds && args.selectedJobIds.length > 0) {
+      const appliedJobs: string[] = [];
+      const results = [];
 
-Your task:
-1. First search for jobs matching the user's description
-2. Apply to the matching jobs automatically (up to 5)
-3. Report which jobs you applied to
+      for (const jobId of args.selectedJobIds) {
+        try {
+          const result = await ctx.runMutation(internal.aiAgent._applyToJob, {
+            candidateId: args.candidateId,
+            jobId: jobId as any,
+          }) as { success: boolean; message: string };
 
-Be helpful and proactive. Current date: ${new Date().toLocaleDateString()}`
-      : `You are a helpful AI assistant for a job seeker using Cepat Hire. The user wants you to LIST matching jobs.
+          if (result.success) {
+            appliedJobs.push(result.message.replace('Applied to ', ''));
+          }
+          results.push(result);
+        } catch (error) {
+          results.push({ success: false, message: String(error) });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      const response = successCount > 0
+        ? `Successfully applied to ${successCount} job(s):\n${appliedJobs.map(j => `• ${j}`).join('\n')}`
+        : 'No applications were submitted. You may have already applied to these jobs.';
+
+      return { response, appliedJobs };
+    }
+
+    // For search action, search jobs directly and return structured data
+    if (args.actionType === "search") {
+      // Extract meaningful keywords from the user's message
+      const message = args.message.toLowerCase();
+
+      // Check if it's a generic/broad query (wants all jobs)
+      const genericPhrases = ['any job', 'all job', 'find me a job', 'show me job', 'list job', 'what job', 'available job'];
+      const isGenericQuery = genericPhrases.some(phrase => message.includes(phrase)) || message.length < 10;
+
+      // Extract potential keywords (job titles, types, etc.)
+      const jobKeywords = ['waiter', 'waitress', 'cashier', 'barista', 'delivery', 'driver', 'tutor', 'sales', 'retail', 'server', 'cook', 'chef', 'cleaner', 'admin', 'assistant', 'part-time', 'full-time', 'remote'];
+      const locationKeywords = ['kuala lumpur', 'kl', 'petaling jaya', 'pj', 'subang', 'shah alam', 'penang', 'johor', 'selangor'];
+
+      let keyword: string | undefined;
+      let location: string | undefined;
+      let jobType: string | undefined;
+
+      // Only apply filters if not a generic query
+      if (!isGenericQuery) {
+        // Find job keyword
+        for (const kw of jobKeywords) {
+          if (message.includes(kw)) {
+            keyword = kw;
+            break;
+          }
+        }
+
+        // Find location
+        for (const loc of locationKeywords) {
+          if (message.includes(loc)) {
+            location = loc === 'kl' ? 'kuala lumpur' : loc === 'pj' ? 'petaling jaya' : loc;
+            break;
+          }
+        }
+
+        // Find job type
+        if (message.includes('part-time') || message.includes('part time')) {
+          jobType = 'part-time';
+        } else if (message.includes('full-time') || message.includes('full time')) {
+          jobType = 'full-time';
+        }
+      }
+
+      const jobs = await ctx.runQuery(internal.aiAgent._searchJobs, {
+        keyword,
+        location,
+        jobType,
+      }) as Array<{ id: string; title: string; company: string; location: string; salary: string; type: string }>;
+
+      const matchingJobs = jobs.map(job => ({
+        id: String(job.id),
+        title: job.title,
+        company: job.company,
+        location: job.location || 'Not specified',
+        salary: job.salary || 'Competitive',
+        type: job.type || 'Part-time',
+      }));
+
+      const response = matchingJobs.length > 0
+        ? `Found ${matchingJobs.length} job(s)${keyword ? ` matching "${keyword}"` : ''}. Select the ones you'd like to apply to.`
+        : 'No jobs found matching your criteria. Try a different search.';
+
+      return { response, matchingJobs };
+    }
+
+    // Default AI chat mode (for general queries)
+    const systemPrompt = `You are a helpful AI assistant for a job seeker using Cepat Hire.
 
 Your task:
 1. Search for jobs matching the user's description
 2. Present the matching jobs in a clear format
-3. Ask if they want to apply to any of them
 
 Be helpful and informative. Current date: ${new Date().toLocaleDateString()}`;
 
