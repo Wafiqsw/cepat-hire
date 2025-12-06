@@ -14,6 +14,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
+import { Route as EmployerDashboardRouteImport } from './routes/employer/dashboard'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
@@ -45,6 +46,11 @@ const SeekerPaymentsRoute = SeekerPaymentsRouteImport.update({
 const EmployerPaymentsRoute = EmployerPaymentsRouteImport.update({
   id: '/employer/payments',
   path: '/employer/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerDashboardRoute = EmployerDashboardRouteImport.update({
+  id: '/employer/dashboard',
+  path: '/employer/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/employer/dashboard'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/employer/dashboard'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/employer/dashboard'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRoute
   PlaygroundRoute: typeof PlaygroundRoute
+  EmployerDashboardRoute: typeof EmployerDashboardRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
   SeekerPaymentsRoute: typeof SeekerPaymentsRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/employer/payments'
       fullPath: '/employer/payments'
       preLoaderRoute: typeof EmployerPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/dashboard': {
+      id: '/employer/dashboard'
+      path: '/employer/dashboard'
+      fullPath: '/employer/dashboard'
+      preLoaderRoute: typeof EmployerDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/start/server-funcs': {
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRoute,
   PlaygroundRoute: PlaygroundRoute,
+  EmployerDashboardRoute: EmployerDashboardRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,
   SeekerPaymentsRoute: SeekerPaymentsRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
