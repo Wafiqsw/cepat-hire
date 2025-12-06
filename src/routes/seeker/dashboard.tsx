@@ -64,8 +64,8 @@ function DashboardPage() {
     jobTitle: app.job?.title || 'Unknown Job',
     company: app.job?.company || 'Unknown Company',
     status: (app.status === 'shortlisted' ? 'accepted' :
-             app.status === 'reviewed' ? 'interviewing' :
-             app.status) as 'accepted' | 'pending' | 'rejected' | 'interviewing',
+      app.status === 'reviewed' ? 'interviewing' :
+        app.status) as 'accepted' | 'pending' | 'rejected' | 'interviewing',
     appliedDate: new Date(app.createdAt).toLocaleDateString('en-GB'),
   })) || []
 
@@ -111,6 +111,11 @@ function DashboardPage() {
 
           {/* Loading Indicator */}
           <Loading size="lg" text="Loading dashboard..." />
+        </div>
+      </SeekerLayout>
+    )
+  }
+
   // Loading state - check candidate profile first
   if (candidate === undefined) {
     return (

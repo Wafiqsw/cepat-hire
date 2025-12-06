@@ -28,6 +28,9 @@ function RouteComponent() {
   const [selectedJob, setSelectedJob] = useState<string | null>(null)
   const [selectedApplicant, setSelectedApplicant] = useState<any>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [showHireConfirmModal, setShowHireConfirmModal] = useState(false)
+  const [showHireSuccessModal, setShowHireSuccessModal] = useState(false)
   const { user } = useAuth()
 
   // Fetch real data from Convex - filtered by employer
@@ -40,6 +43,7 @@ function RouteComponent() {
 
   // Mutations
   const updateApplicationStatus = useMutation(api.applications.updateStatus)
+  const createEmployee = useMutation(api.employees.create)
 
   // Compute jobs with application counts
   const jobsWithCounts = jobs?.map((job) => {
@@ -58,17 +62,17 @@ function RouteComponent() {
   // Get applicants for selected job
   const applicantsForJob = selectedJob
     ? applicationsWithDetails?.filter((app) => app.jobId === selectedJob).map((app) => ({
-        id: app._id,
-        name: app.candidate?.name || 'Unknown',
-        email: app.candidate?.email || '',
-        phone: app.candidate?.phone || 'N/A',
-        location: app.candidate?.location || 'N/A',
-        position: app.job?.title || 'Unknown Position',
-        skills: app.candidate?.skills?.join(', ') || 'Not specified',
-        experience: app.candidate?.experience || 'Not specified',
-        appliedDate: formatDate(app.createdAt),
-        status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected',
-      })) || []
+      id: app._id,
+      name: app.candidate?.name || 'Unknown',
+      email: app.candidate?.email || '',
+      phone: app.candidate?.phone || 'N/A',
+      location: app.candidate?.location || 'N/A',
+      position: app.job?.title || 'Unknown Position',
+      skills: app.candidate?.skills?.join(', ') || 'Not specified',
+      experience: app.candidate?.experience || 'Not specified',
+      appliedDate: formatDate(app.createdAt),
+      status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected',
+    })) || []
     : []
 
   const handleViewApplicants = (jobId: string) => {
@@ -130,6 +134,37 @@ function RouteComponent() {
   const handleCloseModal = () => {
     setIsDetailsModalOpen(false)
     setSelectedApplicant(null)
+  }
+
+  const handleHireApplicant = async (id: string) => {
+    if (!user?.id || !selectedJob) return
+
+    try {
+      // Find the application to get all necessary IDs
+      const application = applicationsWithDetails?.find(app => app._id === id)
+      if (!application) return
+
+      // Update application status to 'hired'
+      await updateApplicationStatus({
+        id: id as Id<'applications'>,
+        status: 'hired',
+      })
+
+      // Create employee record
+      await createEmployee({
+        jobId: application.jobId,
+        candidateId: application.candidateId,
+        employerId: user.id as Id<'users'>,
+        applicationId: id as Id<'applications'>,
+      })
+
+      setShowHireConfirmModal(false)
+      setIsDetailsModalOpen(false)
+      setShowHireSuccessModal(true)
+    } catch (error) {
+      console.error('Failed to hire applicant:', error)
+      alert('Failed to hire applicant. Please try again.')
+    }
   }
 
   const selectedJobData = jobsWithCounts.find((job) => job.id === selectedJob)
@@ -213,59 +248,75 @@ function RouteComponent() {
           </div>
         ) : (
           /* Jobs Grid View */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {jobsWithCounts.map((job) => (
-            <div
-              key={job.id}
-              className="rounded-xl overflow-hidden border-2 shadow-md hover:shadow-xl transition-all duration-300"
-              style={{
-                backgroundColor: '#5a3851',
-                borderColor: '#94618e',
-              }}
-            >
-              {/* Job Image */}
-              <div className="relative w-full h-40 overflow-hidden">
-                <img
-                  src={job.image}
-                  alt={job.title}
-                  className="w-full h-full object-cover"
-                />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(90,56,81,0.8) 100%)',
-                  }}
-                />
-                {/* Job Title Overlay */}
-                <div className="absolute bottom-3 left-4 right-4">
-                  <h3 className="text-lg font-bold text-white truncate">
-                    {job.title}
-                  </h3>
-                </div>
-              </div>
+              <div
+                key={job.id}
+                className="group rounded-2xl overflow-hidden border-2 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderColor: '#94618e',
+                }}
+                onClick={() => handleViewApplicants(job.id)}
+              >
+                {/* Job Image with Overlay */}
+                <div className="relative w-full h-48 overflow-hidden">
+                  <img
+                    src={job.image || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800'}
+                    alt={job.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(148,97,142,0.95) 100%)',
+                    }}
+                  />
 
-              {/* Card Content */}
-              <div className="p-5 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium" style={{ color: '#f8eee7', opacity: 0.9 }}>
-                    {job.company}
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: '#f8eee7', opacity: 0.7 }}>
-                    {job.applicantsCount} Applicants
-                  </p>
+                  {/* Applicant Count Badge */}
+                  <div className="absolute top-4 right-4">
+                    <div
+                      className="px-4 py-2 rounded-full font-bold text-sm shadow-lg backdrop-blur-sm"
+                      style={{
+                        backgroundColor: job.applicantsCount > 0 ? '#10b981' : '#94618e',
+                        color: '#ffffff',
+                      }}
+                    >
+                      {job.applicantsCount} {job.applicantsCount === 1 ? 'Applicant' : 'Applicants'}
+                    </div>
+                  </div>
+
+                  {/* Job Title Overlay */}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-xl font-bold text-white mb-1 line-clamp-2">
+                      {job.title}
+                    </h3>
+                    <p className="text-sm font-medium" style={{ color: '#f8eee7', opacity: 0.9 }}>
+                      {job.company}
+                    </p>
+                  </div>
                 </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleViewApplicants(job.id)}
-                >
-                  VIEW APPLICANTS
-                </Button>
+
+                {/* Card Footer */}
+                <div className="p-4 flex items-center justify-between" style={{ backgroundColor: '#f8eee7' }}>
+                  <div className="flex items-center gap-2">
+                    <Briefcase size={18} style={{ color: '#94618e', opacity: 0.7 }} />
+                    <span className="text-sm font-semibold" style={{ color: '#94618e' }}>
+                      View Applications
+                    </span>
+                  </div>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110"
+                    style={{ backgroundColor: '#94618e' }}
+                  >
+                    <ChevronLeft size={18} style={{ color: '#f8eee7', transform: 'rotate(180deg)' }} />
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Applicant Details Modal */}
       {isDetailsModalOpen && selectedApplicant && (
@@ -400,35 +451,181 @@ function RouteComponent() {
               {/* Action Buttons */}
               <div className="flex gap-3 mt-8">
                 <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => handleShortlistApplicant(selectedApplicant.id)}
+                  variant="danger"
+                  size="lg"
+                  onClick={() => {
+                    setIsDetailsModalOpen(false)
+                    setShowRejectModal(true)
+                  }}
                   className="flex-1"
                 >
-                  SHORTLISTED
+                  ✕ REJECT
                 </Button>
                 <Button
                   variant="primary"
-                  size="md"
-                  onClick={() => handleApproveApplicant(selectedApplicant.id)}
+                  size="lg"
+                  onClick={() => {
+                    setIsDetailsModalOpen(false)
+                    setShowHireConfirmModal(true)
+                  }}
                   className="flex-1"
+                  style={{ backgroundColor: '#10b981' }}
                 >
-                  APPROVE
-                </Button>
-                <Button
-                  variant="danger"
-                  size="md"
-                  onClick={() => handleRejectApplicant(selectedApplicant.id)}
-                  className="flex-1"
-                >
-                  REJECT
+                  ✓ HIRE AS EMPLOYEE
                 </Button>
               </div>
             </div>
           </div>
         </div>
       )}
-      </div>
+
+      {/* Reject Confirmation Modal */}
+      {showRejectModal && selectedApplicant && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowRejectModal(false)}
+        >
+          <div
+            className="absolute inset-0 transition-opacity duration-300"
+            style={{ backgroundColor: 'rgba(148, 97, 142, 0.4)' }}
+            aria-hidden="true"
+          />
+          <div
+            className="relative rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300"
+            onClick={(e) => e.stopPropagation()}
+            style={{ backgroundColor: '#f8eee7' }}
+          >
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#ef4444' }}>
+                <span className="text-4xl text-white">✕</span>
+              </div>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: '#94618e' }}>
+                Reject {selectedApplicant.name}?
+              </h2>
+              <p className="text-base mb-6" style={{ color: '#94618e', opacity: 0.8 }}>
+                Are you sure you want to reject this applicant? They will be notified about this decision.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => setShowRejectModal(false)}
+                  className="flex-1"
+                >
+                  CANCEL
+                </Button>
+                <Button
+                  variant="danger"
+                  size="md"
+                  onClick={() => {
+                    handleRejectApplicant(selectedApplicant.id)
+                    setShowRejectModal(false)
+                  }}
+                  className="flex-1"
+                >
+                  YES, REJECT
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hire Confirmation Modal */}
+      {showHireConfirmModal && selectedApplicant && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowHireConfirmModal(false)}
+        >
+          <div
+            className="absolute inset-0 transition-opacity duration-300"
+            style={{ backgroundColor: 'rgba(148, 97, 142, 0.4)' }}
+            aria-hidden="true"
+          />
+          <div
+            className="relative rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300"
+            onClick={(e) => e.stopPropagation()}
+            style={{ backgroundColor: '#f8eee7' }}
+          >
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#10b981' }}>
+                <Briefcase size={32} style={{ color: '#ffffff' }} />
+              </div>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: '#94618e' }}>
+                Hire {selectedApplicant.name}?
+              </h2>
+              <p className="text-base mb-6" style={{ color: '#94618e', opacity: 0.8 }}>
+                This will create an employee record and update the application status to "Hired". This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => setShowHireConfirmModal(false)}
+                  className="flex-1"
+                >
+                  CANCEL
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => handleHireApplicant(selectedApplicant.id)}
+                  className="flex-1"
+                  style={{ backgroundColor: '#10b981' }}
+                >
+                  YES, HIRE
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hire Success Modal */}
+      {showHireSuccessModal && selectedApplicant && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => {
+            setShowHireSuccessModal(false)
+            setSelectedApplicant(null)
+          }}
+        >
+          <div
+            className="absolute inset-0 transition-opacity duration-300"
+            style={{ backgroundColor: 'rgba(148, 97, 142, 0.4)' }}
+            aria-hidden="true"
+          />
+          <div
+            className="relative rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300"
+            onClick={(e) => e.stopPropagation()}
+            style={{ backgroundColor: '#f8eee7' }}
+          >
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center animate-bounce" style={{ backgroundColor: '#10b981' }}>
+                <span className="text-4xl">✓</span>
+              </div>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: '#94618e' }}>
+                Successfully Hired!
+              </h2>
+              <p className="text-base mb-6" style={{ color: '#94618e', opacity: 0.8 }}>
+                {selectedApplicant.name} has been hired as an employee. The employee record has been created.
+              </p>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  setShowHireSuccessModal(false)
+                  setSelectedApplicant(null)
+                }}
+                className="w-full"
+                style={{ backgroundColor: '#10b981' }}
+              >
+                DONE
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </EmployerLayout>
   )
 }

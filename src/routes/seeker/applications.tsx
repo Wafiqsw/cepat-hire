@@ -26,14 +26,6 @@ interface Application {
 }
 
 function ApplicationsPage() {
-  const [statusFilter, setStatusFilter] = useState<string>('pending')
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Simulate API call
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1200)
-    return () => clearTimeout(timer)
-  }, [])
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const { user } = useAuth()
 
@@ -55,8 +47,8 @@ function ApplicationsPage() {
     location: app.job?.location || 'Remote',
     appliedDate: new Date(app.createdAt).toLocaleDateString('en-GB'),
     status: (app.status === 'shortlisted' ? 'accepted' :
-             app.status === 'reviewed' ? 'interviewing' :
-             app.status) as ApplicationStatus,
+      app.status === 'reviewed' ? 'interviewing' :
+        app.status) as ApplicationStatus,
     salary: app.job?.salary || 'Competitive',
     jobType: app.job?.type || 'Part-time',
     description: app.job?.description || '',
@@ -104,34 +96,7 @@ function ApplicationsPage() {
     interviewing: applications.filter(a => a.status === 'interviewing').length,
   }
 
-  if (isLoading) {
-    return (
-      <SeekerLayout>
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold mb-8" style={{ color: '#94618e' }}>
-            My Applications
-          </h1>
 
-          {/* Filter Tabs Skeleton */}
-          <div className="flex gap-2 mb-6 overflow-x-auto">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} variant="rectangle" className="h-10 w-24" />
-            ))}
-          </div>
-
-          {/* Application Cards Skeleton */}
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} variant="card" className="h-48" />
-            ))}
-          </div>
-
-          {/* Loading Indicator */}
-          <Loading size="lg" text="Loading applications..." />
-        </div>
-      </SeekerLayout>
-    )
-  }
 
   return (
     <SeekerLayout>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Download, Eye, X, User, Calendar, CreditCard, FileText, DollarSign, Clock } from 'lucide-react'
+import { Download, Eye, X, User, Calendar, CreditCard, FileText, DollarSign } from 'lucide-react'
 
-type PaymentStatus = 'completed' | 'pending' | 'cancelled'
+type PaymentStatus = 'completed' | 'pending' | 'cancelled' | 'ongoing'
 
 interface JobData {
   id: string
@@ -56,6 +56,12 @@ const getStatusStyles = (status: PaymentStatus) => {
       textColor: '#dc2626',
       text: 'Cancelled',
     },
+    ongoing: {
+      backgroundColor: '#dbeafe',
+      borderColor: '#3b82f6',
+      textColor: '#2563eb',
+      text: 'Ongoing',
+    },
   }
   return statusStyles[status]
 }
@@ -101,7 +107,7 @@ export const PaymentCard = ({
             className="px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-wide shadow-sm"
             style={{
               backgroundColor: statusStyle.backgroundColor,
-              color: statusStyle.color,
+              color: statusStyle.textColor,
             }}
           >
             {statusStyle.text}
@@ -318,7 +324,7 @@ export const PaymentCard = ({
                     className="px-3 py-1 rounded-full font-bold text-xs uppercase tracking-wide"
                     style={{
                       backgroundColor: statusStyle.backgroundColor,
-                      color: statusStyle.color,
+                      color: statusStyle.textColor,
                     }}
                   >
                     {statusStyle.text}

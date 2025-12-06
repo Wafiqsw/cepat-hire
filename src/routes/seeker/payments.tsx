@@ -6,8 +6,6 @@ import { PaymentCard, Modal, ModalActions, Button, Loading, Skeleton } from '../
 import { Wallet, Clock, CheckCircle, AlertCircle, Filter, Building2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { PaymentCard, Modal, ModalActions, Button } from '../../components'
-import { Wallet, Clock, CheckCircle, AlertCircle, Filter, Building2 } from 'lucide-react'
 import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/seeker/payments')({

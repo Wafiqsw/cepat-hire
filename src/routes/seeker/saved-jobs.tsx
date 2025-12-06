@@ -2,9 +2,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
-import { useState, useEffect } from 'react'
 import { Bookmark, MapPin, DollarSign, Clock, X } from 'lucide-react'
-import { Button, Loading, Skeleton } from '../../components'
+import { Button } from '../../components'
 import { useAuth } from '../../contexts/AuthContext'
 import type { Id } from '../../../convex/_generated/dataModel'
 
@@ -25,17 +24,6 @@ function formatTimeAgo(timestamp: number): string {
 }
 
 function SavedJobsPage() {
-  const [isLoading, setIsLoading] = useState(true)
-  
-
-  // Simulate API call
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1100)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const handleUnsave = (jobId: string) => {
-    setSavedJobs(savedJobs.filter(job => job.id !== jobId))
   const navigate = useNavigate()
   const { user } = useAuth()
 
@@ -55,21 +43,23 @@ function SavedJobsPage() {
   const applyToJob = useMutation(api.seeker.applyToJob)
 
   // Transform data for display
-  const savedJobs = savedJobsData?.map((saved) => ({
-    id: saved._id,
-    jobId: saved.jobId,
-    title: saved.job?.title || 'Unknown Job',
-    company: saved.job?.company || 'Unknown Company',
-    location: saved.job?.location || 'Remote',
-    salary: saved.job?.salary || 'Competitive',
-    jobType: saved.job?.type || 'Part-time',
-    postedDate: saved.job?.createdAt
-      ? formatTimeAgo(saved.job.createdAt)
-      : 'Recently',
-    description: saved.job?.description || '',
-  })) || []
+  const savedJobs = savedJobsData
+    ?.filter((saved) => saved !== null)
+    .map((saved) => ({
+      id: saved._id,
+      jobId: saved.jobId,
+      title: saved.job?.title || 'Unknown Job',
+      company: saved.job?.company || 'Unknown Company',
+      location: saved.job?.location || 'Remote',
+      salary: saved.job?.salary || 'Competitive',
+      jobType: saved.job?.type || 'Part-time',
+      postedDate: saved.job?.createdAt
+        ? formatTimeAgo(saved.job.createdAt)
+        : 'Recently',
+      description: saved.job?.description || '',
+    })) || []
 
-  const handleUnsave = async (savedJobId: string, jobId: Id<"jobs">) => {
+  const handleUnsave = async (jobId: Id<"jobs">) => {
     if (!candidateId) return
     try {
       await unsaveJob({ candidateId, jobId })
@@ -145,29 +135,7 @@ function SavedJobsPage() {
     )
   }
 
-  if (isLoading) {
-    return (
-      <SeekerLayout>
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          {/* Header Skeleton */}
-          <div className="mb-8">
-            <Skeleton variant="text" className="h-9 w-48 mb-2" />
-            <Skeleton variant="text" className="h-6 w-32" />
-          </div>
 
-          {/* Jobs List Skeleton */}
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} variant="card" className="h-48" />
-            ))}
-          </div>
-
-          {/* Loading Indicator */}
-          <Loading size="lg" text="Loading saved jobs..." />
-        </div>
-      </SeekerLayout>
-    )
-  }
 
   return (
     <SeekerLayout>
@@ -196,7 +164,7 @@ function SavedJobsPage() {
               >
                 {/* Remove Button */}
                 <button
-                  onClick={() => handleUnsave(job.id, job.jobId)}
+                  onClick={() => handleUnsave(job.jobId)}
                   className="absolute top-4 right-4 p-2 rounded-full transition-all duration-200 hover:bg-red-50"
                   title="Remove from saved"
                 >

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Search, MapPin, Building2, DollarSign, Clock, Calendar, Briefcase, Heart, Share2 } from 'lucide-react'
@@ -261,8 +261,6 @@ function RouteComponent() {
   const [showApplyModal, setShowApplyModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [aiJobPrompt, setAiJobPrompt] = useState('')
-  const [aiActionType, setAiActionType] = useState<'auto-apply' | 'list-jobs'>('list-jobs')
-  const [aiPromptSubmitted, setAiPromptSubmitted] = useState(false)
 
   // Simulate API call
   useEffect(() => {
@@ -270,9 +268,6 @@ function RouteComponent() {
     return () => clearTimeout(timer)
   }, [])
 
-  const handleApply = (jobId: string) => {
-    console.log('Applied to job:', jobId)
-    // TODO: Implement actual apply logic
   const [aiStep, setAiStep] = useState<'prompt' | 'results'>('prompt')
   const [aiMatchingJobs, setAiMatchingJobs] = useState<Array<{
     id: string;
@@ -491,6 +486,12 @@ function RouteComponent() {
               {/* Loading Indicator */}
               <Loading size="lg" text="Loading job listings..." />
             </main>
+          </div>
+        </div>
+      </SeekerLayout>
+    )
+  }
+
   // Loading state
   if (jobs === undefined) {
     return (

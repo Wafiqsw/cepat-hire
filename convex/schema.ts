@@ -74,12 +74,27 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("reviewed"),
       v.literal("shortlisted"),
-      v.literal("rejected")
+      v.literal("rejected"),
+      v.literal("hired")
     ),
     aiScore: v.optional(v.number()),
     notes: v.optional(v.string()),
     createdAt: v.number(),
   })
+    .index("by_job", ["jobId"])
+    .index("by_candidate", ["candidateId"]),
+
+  employees: defineTable({
+    jobId: v.id("jobs"),
+    candidateId: v.id("candidates"),
+    employerId: v.id("users"),
+    applicationId: v.id("applications"),
+    hiredDate: v.number(),
+    status: v.union(v.literal("active"), v.literal("inactive")),
+    salary: v.optional(v.string()),
+    startDate: v.optional(v.number()),
+  })
+    .index("by_employer", ["employerId"])
     .index("by_job", ["jobId"])
     .index("by_candidate", ["candidateId"]),
 
