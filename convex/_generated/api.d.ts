@@ -14,6 +14,7 @@ import type * as auth from "../auth.js";
 import type * as candidates from "../candidates.js";
 import type * as conversations from "../conversations.js";
 import type * as jobs from "../jobs.js";
+import type * as payments from "../payments.js";
 import type * as seed from "../seed.js";
 
 import type {
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   candidates: typeof candidates;
   conversations: typeof conversations;
   jobs: typeof jobs;
+  payments: typeof payments;
   seed: typeof seed;
 }>;
 

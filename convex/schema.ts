@@ -77,4 +77,25 @@ export default defineSchema({
   })
     .index("by_job", ["jobId"])
     .index("by_candidate", ["candidateId"]),
+
+  payments: defineTable({
+    jobId: v.id("jobs"),
+    candidateId: v.id("candidates"),
+    amount: v.number(),
+    currency: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("completed"),
+      v.literal("ongoing"),
+      v.literal("cancelled")
+    ),
+    dateRange: v.string(), // e.g., "10/11 - 1/12"
+    description: v.string(),
+    paymentMethod: v.string(),
+    transactionId: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_job", ["jobId"])
+    .index("by_candidate", ["candidateId"])
+    .index("by_status", ["status"]),
 });

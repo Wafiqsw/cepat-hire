@@ -135,15 +135,54 @@ export const seedData = mutation({
     });
 
     const candidate3 = await ctx.db.insert("candidates", {
-      name: "Raj Kumar",
-      email: "raj@example.com",
+      name: "Lee Wei Ming",
+      email: "leewei@example.com",
       phone: "+60 14-567 8901",
-      location: "Penang",
-      experience: "4 years experience",
+      location: "Kuala Lumpur",
+      experience: "2 years experience",
       resumeText:
-        "Full stack developer with 4 years experience. Comfortable with both frontend and backend work.",
-      skills: ["JavaScript", "Python", "React", "Node.js", "SQL"],
-      status: "screening",
+        "Experienced delivery rider with knowledge of KL area. Owns motorcycle and has clean driving record.",
+      skills: ["Delivery", "Customer Service", "Navigation", "Time Management"],
+      status: "hired",
+      createdAt: Date.now(),
+    });
+
+    const candidate4 = await ctx.db.insert("candidates", {
+      name: "Nurul Aisyah",
+      email: "nurul@example.com",
+      phone: "+60 15-678 9012",
+      location: "Kuala Lumpur",
+      experience: "3 years experience",
+      resumeText:
+        "Mathematics tutor with degree in Applied Mathematics. Patient and good at explaining complex concepts.",
+      skills: ["Mathematics", "Teaching", "Communication", "Patience"],
+      status: "hired",
+      createdAt: Date.now(),
+    });
+
+    const candidate5 = await ctx.db.insert("candidates", {
+      name: "Muhammad Faris",
+      email: "faris@example.com",
+      phone: "+60 16-789 0123",
+      location: "Johor Bahru",
+      experience: "1 year experience",
+      resumeText:
+        "Reliable warehouse worker with attention to detail. Physically fit and punctual.",
+      skills: ["Warehouse Operations", "Packing", "Inventory", "Physical Fitness"],
+      status: "hired",
+      createdAt: Date.now(),
+    });
+
+    const candidate6 = await ctx.db.insert("candidates", {
+      name: "Amirah Sofea",
+      email: "amirah@example.com",
+      phone: "+60 17-890 1234",
+      location: "Petaling Jaya",
+      experience: "2 years experience",
+      resumeText:
+        "Friendly restaurant server with experience in family dining establishments. Great with customers.",
+      skills: ["Customer Service", "Food Service", "Team Work", "Communication"],
+      status: "hired",
       createdAt: Date.now(),
     });
 
@@ -166,15 +205,114 @@ export const seedData = mutation({
     await ctx.db.insert("applications", {
       jobId: job3,
       candidateId: candidate3,
-      status: "pending",
+      status: "shortlisted",
       createdAt: Date.now(),
+    });
+
+    await ctx.db.insert("applications", {
+      jobId: job4,
+      candidateId: candidate4,
+      status: "shortlisted",
+      createdAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
+    });
+
+    await ctx.db.insert("applications", {
+      jobId: job5,
+      candidateId: candidate5,
+      status: "shortlisted",
+      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    });
+
+    await ctx.db.insert("applications", {
+      jobId: job6,
+      candidateId: candidate6,
+      status: "shortlisted",
+      createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
+    });
+
+    // Create sample payments
+    await ctx.db.insert("payments", {
+      jobId: job1,
+      candidateId: candidate1,
+      amount: 450.0,
+      currency: "RM",
+      status: "completed",
+      dateRange: "10/11 - 1/12",
+      description: "Part-Time Barista - 3 weeks completed • RM 90/day",
+      paymentMethod: "Bank Transfer",
+      transactionId: "TXN-2024-001234",
+      createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
+    });
+
+    await ctx.db.insert("payments", {
+      jobId: job2,
+      candidateId: candidate2,
+      amount: 320.0,
+      currency: "RM",
+      status: "pending",
+      dateRange: "20/11 - 5/12",
+      description: "Retail Sales Assistant - 2 weeks completed • RM 80/day",
+      paymentMethod: "Online Banking",
+      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
+    });
+
+    await ctx.db.insert("payments", {
+      jobId: job3,
+      candidateId: candidate3,
+      amount: 540.0,
+      currency: "RM",
+      status: "completed",
+      dateRange: "25/11 - 2/12",
+      description: "Food Delivery Rider - 1 week completed • RM 90/day",
+      paymentMethod: "E-Wallet",
+      transactionId: "TXN-2024-001220",
+      createdAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
+    });
+
+    await ctx.db.insert("payments", {
+      jobId: job4,
+      candidateId: candidate4,
+      amount: 800.0,
+      currency: "RM",
+      status: "completed",
+      dateRange: "1/11 - 28/11",
+      description: "Tutor - Mathematics - 20 hours completed • RM 100/day",
+      paymentMethod: "Bank Transfer",
+      transactionId: "TXN-2024-001180",
+      createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
+    });
+
+    await ctx.db.insert("payments", {
+      jobId: job5,
+      candidateId: candidate5,
+      amount: 600.0,
+      currency: "RM",
+      status: "pending",
+      dateRange: "22/11 - 6/12",
+      description: "Warehouse Packer - 2 weeks completed • RM 75/day",
+      paymentMethod: "Bank Transfer",
+      createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
+    });
+
+    await ctx.db.insert("payments", {
+      jobId: job6,
+      candidateId: candidate6,
+      amount: 375.0,
+      currency: "RM",
+      status: "completed",
+      dateRange: "18/11 - 25/11",
+      description: "Restaurant Server - 1 week completed • RM 85/day",
+      paymentMethod: "E-Wallet",
+      transactionId: "TXN-2024-001150",
+      createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
     });
 
     return {
       message: "Seed data created successfully",
       jobs: 6,
-      candidates: 3,
-      applications: 3,
+      candidates: 6,
+      applications: 6,
+      payments: 6,
     };
   },
 });
@@ -183,7 +321,7 @@ export const seedData = mutation({
 export const clearAll = mutation({
   args: {},
   handler: async (ctx) => {
-    const tables = ["applications", "candidates", "jobs", "conversations"];
+    const tables = ["payments", "applications", "candidates", "jobs", "conversations"];
     for (const table of tables) {
       const docs = await ctx.db.query(table as any).collect();
       for (const doc of docs) {

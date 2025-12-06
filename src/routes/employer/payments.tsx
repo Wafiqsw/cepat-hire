@@ -1,8 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
 import { PaymentCard } from '../../components'
 import { Filter, Download, Search } from 'lucide-react'
 import { useState } from 'react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/payments')({
   component: EmployerPayments,
@@ -12,134 +15,35 @@ function EmployerPayments() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
-  // Sample payment data - job completion payments linked to job posts
-  const payments = [
-    {
-      id: '1',
-      amount: 450.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '10/11 - 1/12',
-      description: 'Part-Time Barista - 3 weeks completed • RM 90/day',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001234',
-      recipient: 'Ahmad Abdullah',
-      job: {
-        id: '1',
-        title: 'Part-Time Barista',
-        company: 'Cafe Delight',
-        location: 'Kuala Lumpur, Malaysia',
-        type: 'Part-time',
-        salary: 'RM 10 - RM 15/hour',
-        description: 'Join our friendly team! Make delicious coffee and serve customers.',
-        image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80',
-      },
-    },
-    {
-      id: '2',
-      amount: 320.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: '20/11 - 5/12',
-      description: 'Retail Sales Assistant - 2 weeks completed • RM 80/day',
-      paymentMethod: 'Online Banking',
-      transactionId: 'TXN-2024-001235',
-      recipient: 'Siti Nurhaliza',
-      job: {
-        id: '2',
-        title: 'Retail Sales Assistant',
-        company: 'Fashion Outlet',
-        location: 'Penang, Malaysia',
-        type: 'Part-time',
-        salary: 'RM 8 - RM 12/hour',
-        description: 'Help customers find perfect outfits. Part-time position with flexible schedule.',
-        image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
-      },
-    },
-    {
-      id: '3',
-      amount: 540.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '25/11 - 2/12',
-      description: 'Food Delivery Rider - 1 week completed • RM 90/day',
-      paymentMethod: 'E-Wallet',
-      transactionId: 'TXN-2024-001220',
-      recipient: 'Lee Wei Ming',
-      job: {
-        id: '3',
-        title: 'Food Delivery Rider',
-        company: 'Quick Eats',
-        location: 'Selangor, Malaysia',
-        type: 'Part-time',
-        salary: 'RM 12 - RM 18/hour',
-        description: 'Deliver food to customers. Own motorcycle required.',
-        image: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&q=80',
-      },
-    },
-    {
-      id: '4',
-      amount: 800.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '1/11 - 28/11',
-      description: 'Tutor - Mathematics - 20 hours completed • RM 100/day',
-      paymentMethod: 'Bank Transfer',
-      transactionId: 'TXN-2024-001180',
-      recipient: 'Nurul Aisyah',
-      job: {
-        id: '4',
-        title: 'Tutor - Mathematics',
-        company: 'Learning Center',
-        location: 'Kuala Lumpur, Malaysia',
-        type: 'Part-time',
-        salary: 'RM 25 - RM 40/hour',
-        description: 'Teach mathematics to secondary school students.',
-        image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
-      },
-    },
-    {
-      id: '5',
-      amount: 600.00,
-      currency: 'RM',
-      status: 'pending' as const,
-      date: '22/11 - 6/12',
-      description: 'Warehouse Packer - 2 weeks completed • RM 75/day',
-      paymentMethod: 'Bank Transfer',
-      recipient: 'Muhammad Faris',
-      job: {
-        id: '5',
-        title: 'Warehouse Packer',
-        company: 'Logistics Hub',
-        location: 'Johor Bahru, Malaysia',
-        type: 'Part-time',
-        salary: 'RM 9 - RM 13/hour',
-        description: 'Pack and prepare orders for shipment. Physical work.',
-        image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80',
-      },
-    },
-    {
-      id: '6',
-      amount: 375.00,
-      currency: 'RM',
-      status: 'completed' as const,
-      date: '18/11 - 25/11',
-      description: 'Restaurant Server - 1 week completed • RM 85/day',
-      paymentMethod: 'E-Wallet',
-      transactionId: 'TXN-2024-001150',
-      recipient: 'Amirah Sofea',
-      job: {
-        id: '6',
-        title: 'Restaurant Server',
-        company: 'Family Dining',
-        location: 'Petaling Jaya, Malaysia',
-        type: 'Part-time',
-        salary: 'RM 10 - RM 14/hour',
-        description: 'Serve customers in a friendly family restaurant.',
-        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
-      },
-    },
-  ]
+  // Fetch real data from Convex
+  const paymentsWithDetails = useQuery(api.payments.listWithDetails)
+  const stats = useQuery(api.payments.getStats)
+
+  // Mutations
+  const updatePaymentStatus = useMutation(api.payments.updateStatus)
+
+  // Transform payments data for display
+  const payments = paymentsWithDetails?.map((payment) => ({
+    id: payment._id,
+    amount: payment.amount,
+    currency: payment.currency,
+    status: payment.status as 'completed' | 'pending' | 'ongoing' | 'cancelled',
+    date: payment.dateRange,
+    description: payment.description,
+    paymentMethod: payment.paymentMethod,
+    transactionId: payment.transactionId,
+    recipient: payment.candidate?.name || 'Unknown',
+    job: payment.job ? {
+      id: payment.job._id,
+      title: payment.job.title,
+      company: payment.job.company,
+      location: payment.job.location || 'Location not specified',
+      type: payment.job.type || 'Part-time',
+      salary: payment.job.salary || 'Salary not specified',
+      description: payment.job.description,
+      image: payment.job.image || '',
+    } : undefined,
+  })) || []
 
   const filteredPayments = payments.filter(payment => {
     const matchesSearch = payment.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,11 +52,53 @@ function EmployerPayments() {
     return matchesSearch && matchesStatus
   })
 
-  const stats = {
-    total: payments.reduce((sum, p) => sum + p.amount, 0),
-    completed: payments.filter(p => p.status === 'completed').length,
-    pending: payments.filter(p => p.status === 'pending').length,
-    totalPayments: payments.length,
+  const displayStats = {
+    total: stats?.total || 0,
+    completed: stats?.completed || 0,
+    pending: stats?.pending || 0,
+    totalPayments: stats?.totalPayments || 0,
+  }
+
+  // Handlers
+  const handleApprovePayment = async (id: string) => {
+    try {
+      await updatePaymentStatus({
+        id: id as Id<'payments'>,
+        status: 'completed',
+        transactionId: `TXN-${Date.now()}`,
+      })
+    } catch (error) {
+      console.error('Failed to approve payment:', error)
+    }
+  }
+
+  const handleRejectPayment = async (id: string) => {
+    try {
+      await updatePaymentStatus({
+        id: id as Id<'payments'>,
+        status: 'cancelled',
+      })
+    } catch (error) {
+      console.error('Failed to reject payment:', error)
+    }
+  }
+
+  // Loading state
+  if (paymentsWithDetails === undefined || stats === undefined) {
+    return (
+      <EmployerLayout>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
+            Payment Management
+          </h1>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+              Loading...
+            </div>
+          </div>
+        </div>
+      </EmployerLayout>
+    )
   }
 
   return (
@@ -175,7 +121,7 @@ function EmployerPayments() {
               Total Paid
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#94618e' }}>
-              RM {stats.total.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
+              RM {displayStats.total.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}
             </h3>
           </div>
           <div className="p-6 rounded-xl border-2" style={{ backgroundColor: '#f8eee7', borderColor: '#3b82f6' }}>
@@ -183,7 +129,7 @@ function EmployerPayments() {
               Completed
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#3b82f6' }}>
-              {stats.completed}
+              {displayStats.completed}
             </h3>
           </div>
           <div className="p-6 rounded-xl border-2" style={{ backgroundColor: '#f8eee7', borderColor: '#fbbf24' }}>
@@ -191,7 +137,7 @@ function EmployerPayments() {
               Pending
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#d97706' }}>
-              {stats.pending}
+              {displayStats.pending}
             </h3>
           </div>
           <div className="p-6 rounded-xl border-2" style={{ backgroundColor: '#f8eee7', borderColor: '#4ade80' }}>
@@ -199,7 +145,7 @@ function EmployerPayments() {
               Total Payments
             </p>
             <h3 className="text-2xl font-bold" style={{ color: '#16a34a' }}>
-              {stats.totalPayments}
+              {displayStats.totalPayments}
             </h3>
           </div>
         </div>
@@ -268,8 +214,8 @@ function EmployerPayments() {
                 payment={payment}
                 onViewDetails={(id) => console.log('View payment details:', id)}
                 onDownloadReceipt={(id) => console.log('Download receipt:', id)}
-                onApprovePayment={(id) => console.log('Approve payment:', id)}
-                onRejectPayment={(id) => console.log('Reject payment:', id)}
+                onApprovePayment={handleApprovePayment}
+                onRejectPayment={handleRejectPayment}
               />
             ))
           ) : (
