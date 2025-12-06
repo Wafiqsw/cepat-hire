@@ -23,6 +23,7 @@ interface JobData {
   salary?: string
   postedDate: string
   description?: string
+  image?: string
 }
 
 interface JobCardProps {
@@ -70,16 +71,33 @@ export const JobCard = ({
           borderColor: '#94618e',
         }}
       >
+        {/* Job Image */}
+        {job.image && (
+          <div className="relative w-full h-32 overflow-hidden">
+            <img
+              src={job.image}
+              alt={job.title}
+              className="w-full h-full object-cover"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(148,97,142,0.1) 100%)',
+              }}
+            />
+          </div>
+        )}
+
         {/* Header */}
         <div
-          className="px-4 sm:px-6 py-4 border-b-2 flex items-start justify-between gap-3"
+          className="px-4 py-3 border-b-2 flex items-start justify-between gap-3"
           style={{ borderBottomColor: '#94618e' }}
         >
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg sm:text-xl font-bold mb-1 truncate" style={{ color: '#94618e' }} title={job.title}>
+            <h3 className="text-base sm:text-lg font-bold mb-1 truncate" style={{ color: '#94618e' }} title={job.title}>
               {job.title}
             </h3>
-            <p className="text-sm sm:text-base font-medium truncate" style={{ color: '#94618e', opacity: 0.8 }} title={job.company}>
+            <p className="text-xs sm:text-sm font-medium truncate" style={{ color: '#94618e', opacity: 0.8 }} title={job.company}>
               {job.company}
             </p>
           </div>
@@ -100,34 +118,34 @@ export const JobCard = ({
         </div>
 
         {/* Content */}
-        <div className="px-4 sm:px-6 py-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-4">
+        <div className="px-4 py-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
             <div className="flex items-center gap-2 min-w-0">
-              <MapPin size={16} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
-              <span className="text-xs sm:text-sm truncate" style={{ color: '#94618e' }} title={job.location}>
+              <MapPin size={14} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
+              <span className="text-xs truncate" style={{ color: '#94618e' }} title={job.location}>
                 {job.location}
               </span>
             </div>
 
             <div className="flex items-center gap-2 min-w-0">
-              <Briefcase size={16} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
-              <span className="text-xs sm:text-sm truncate" style={{ color: '#94618e' }}>
+              <Briefcase size={14} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
+              <span className="text-xs truncate" style={{ color: '#94618e' }}>
                 {job.type}
               </span>
             </div>
 
             {job.salary && (
               <div className="flex items-center gap-2 min-w-0">
-                <DollarSign size={16} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
-                <span className="text-xs sm:text-sm font-semibold truncate" style={{ color: '#94618e' }}>
+                <DollarSign size={14} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
+                <span className="text-xs font-semibold truncate" style={{ color: '#94618e' }}>
                   {job.salary}
                 </span>
               </div>
             )}
 
             <div className="flex items-center gap-2 min-w-0">
-              <Clock size={16} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
-              <span className="text-xs sm:text-sm truncate" style={{ color: '#94618e', opacity: 0.7 }}>
+              <Clock size={14} style={{ color: '#94618e', opacity: 0.7 }} className="flex-shrink-0" />
+              <span className="text-xs truncate" style={{ color: '#94618e', opacity: 0.7 }}>
                 {job.postedDate}
               </span>
             </div>
@@ -135,7 +153,7 @@ export const JobCard = ({
 
           {job.description && (
             <p
-              className="text-xs sm:text-sm leading-relaxed line-clamp-2"
+              className="text-xs leading-relaxed line-clamp-2"
               style={{ color: '#94618e', opacity: 0.8 }}
               title={job.description}
             >
@@ -146,7 +164,7 @@ export const JobCard = ({
 
         {/* Footer Actions */}
         <div
-          className="px-4 sm:px-6 py-3 sm:py-4 border-t-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3"
+          className="px-4 py-2.5 border-t-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
           style={{ borderTopColor: '#94618e' }}
         >
           {variant === 'employer' ? (
