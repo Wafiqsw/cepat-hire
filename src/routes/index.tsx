@@ -152,19 +152,19 @@ function HomePage() {
                 linkedin: 'haziq-ilham'
               },
               {
-                name: 'Muhammad Wafiq',
+                name: 'Mohamad Wafiq',
                 role: 'Full Stack Developer',
                 image: '/members/wafiq.jpeg',
                 linkedin: 'muhammad-wafiq-bin-shukri-wafiqi'
               },
               {
-                name: 'Afrina',
+                name: 'Afrina Irdina',
                 role: 'Full Stack Developer',
                 image: '/members/afrina.jpeg',
                 linkedin: ''
               },
               {
-                name: 'Imran',
+                name: 'Muhammad Imran',
                 role: 'Full Stack Developer',
                 image: '/members/imran.jpg',
                 linkedin: ''
