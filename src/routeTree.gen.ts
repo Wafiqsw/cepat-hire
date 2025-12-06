@@ -16,6 +16,7 @@ import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
 import { Route as EmployerJoblistRouteImport } from './routes/employer/joblist'
 import { Route as EmployerDashboardRouteImport } from './routes/employer/dashboard'
+import { Route as EmployerApplicationsRouteImport } from './routes/employer/applications'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
@@ -59,6 +60,11 @@ const EmployerJoblistRoute = EmployerJoblistRouteImport.update({
 const EmployerDashboardRoute = EmployerDashboardRouteImport.update({
   id: '/employer/dashboard',
   path: '/employer/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerApplicationsRoute = EmployerApplicationsRouteImport.update({
+  id: '/employer/applications',
+  path: '/employer/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/playground': typeof PlaygroundRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/playground': typeof PlaygroundRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/playground': typeof PlaygroundRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/auth/login'
     | '/auth/register'
+    | '/employer/applications'
     | '/employer/dashboard'
     | '/employer/joblist'
     | '/employer/payments'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/auth/login'
     | '/auth/register'
+    | '/employer/applications'
     | '/employer/dashboard'
     | '/employer/joblist'
     | '/employer/payments'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/auth/login'
     | '/auth/register'
+    | '/employer/applications'
     | '/employer/dashboard'
     | '/employer/joblist'
     | '/employer/payments'
@@ -225,6 +237,7 @@ export interface RootRouteChildren {
   PlaygroundRoute: typeof PlaygroundRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  EmployerApplicationsRoute: typeof EmployerApplicationsRoute
   EmployerDashboardRoute: typeof EmployerDashboardRoute
   EmployerJoblistRoute: typeof EmployerJoblistRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/employer/dashboard'
       fullPath: '/employer/dashboard'
       preLoaderRoute: typeof EmployerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/applications': {
+      id: '/employer/applications'
+      path: '/employer/applications'
+      fullPath: '/employer/applications'
+      preLoaderRoute: typeof EmployerApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/register': {
@@ -361,6 +381,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlaygroundRoute: PlaygroundRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  EmployerApplicationsRoute: EmployerApplicationsRoute,
   EmployerDashboardRoute: EmployerDashboardRoute,
   EmployerJoblistRoute: EmployerJoblistRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,

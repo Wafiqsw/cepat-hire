@@ -11,7 +11,8 @@ interface ApplicantData {
   phone: string
   location: string
   position: string
-  experience: string
+  experience?: string
+  skills?: string
   appliedDate: string
   status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected'
   avatar?: string
@@ -75,123 +76,145 @@ export const ApplicantCard = ({
   return (
     <>
       <div
-        className={`rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 ${className}`}
+        className={`rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 hover:scale-[1.01] ${className}`}
         style={{
-          backgroundColor: '#f8eee7',
+          backgroundColor: '#5a3851',
           borderColor: '#94618e',
         }}
       >
-      {/* Header */}
-      <div
-        className="px-4 sm:px-6 py-3 sm:py-4 border-b-2 flex items-center justify-between gap-3"
-        style={{ borderBottomColor: '#94618e' }}
-      >
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-          <AvatarPlaceholder
-            name={applicant.name}
-            src={applicant.avatar}
-            size="md"
-            className="flex-shrink-0"
-          />
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base sm:text-lg font-bold truncate" style={{ color: '#94618e' }} title={applicant.name}>
-              {applicant.name}
-            </h3>
-            <p className="text-xs sm:text-sm truncate" style={{ color: '#94618e', opacity: 0.7 }} title={`Applied for: ${applicant.position}`}>
-              Applied for: {applicant.position}
-            </p>
-          </div>
-        </div>
-
-        <span
-          className="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0"
+        {/* Header with Gradient */}
+        <div
+          className="px-5 py-4 flex items-center justify-between gap-3"
           style={{
-            backgroundColor: statusStyle.bg,
-            color: statusStyle.text,
+            background: 'linear-gradient(135deg, rgba(148,97,142,0.15) 0%, rgba(90,56,81,0.05) 100%)',
           }}
         >
-          {statusStyle.label}
-        </span>
-      </div>
-
-      {/* Content */}
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
-          <div className="flex items-center gap-2 min-w-0">
-            <Mail size={14} style={{ color: '#94618e', opacity: 0.6 }} className="flex-shrink-0" />
-            <span className="text-xs sm:text-sm truncate" style={{ color: '#94618e' }} title={applicant.email}>
-              {applicant.email}
-            </span>
+          <div className="flex items-center gap-4 min-w-0 flex-1">
+            <AvatarPlaceholder
+              name={applicant.name}
+              src={applicant.avatar}
+              size="lg"
+            />
+            <div className="min-w-0 flex-1">
+              <h3 className="text-lg font-bold truncate" style={{ color: '#f8eee7' }} title={applicant.name}>
+                {applicant.name}
+              </h3>
+              <p className="text-sm truncate" style={{ color: '#f8eee7', opacity: 0.8 }} title={`Applied for: ${applicant.position}`}>
+                {applicant.position}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 min-w-0">
-            <Phone size={14} style={{ color: '#94618e', opacity: 0.6 }} className="flex-shrink-0" />
-            <span className="text-xs sm:text-sm truncate" style={{ color: '#94618e' }} title={applicant.phone}>
-              {applicant.phone}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 min-w-0">
-            <MapPin size={14} style={{ color: '#94618e', opacity: 0.6 }} className="flex-shrink-0" />
-            <span className="text-xs sm:text-sm truncate" style={{ color: '#94618e' }} title={applicant.location}>
-              {applicant.location}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 min-w-0">
-            <Briefcase size={14} style={{ color: '#94618e', opacity: 0.6 }} className="flex-shrink-0" />
-            <span className="text-xs sm:text-sm truncate" style={{ color: '#94618e' }} title={applicant.experience}>
-              {applicant.experience}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 mb-3 sm:mb-4 min-w-0">
-          <Clock size={14} style={{ color: '#94618e', opacity: 0.6 }} className="flex-shrink-0" />
-          <span className="text-xs sm:text-sm truncate" style={{ color: '#94618e', opacity: 0.7 }}>
-            Applied on {applicant.appliedDate}
+          <span
+            className="px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap flex-shrink-0 shadow-sm"
+            style={{
+              backgroundColor: statusStyle.bg,
+              color: statusStyle.text,
+            }}
+          >
+            {statusStyle.label}
           </span>
         </div>
-      </div>
 
-      {/* Footer Actions */}
-      <div
-        className="px-4 sm:px-6 py-3 sm:py-4 border-t-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3"
-        style={{ borderTopColor: '#94618e' }}
-      >
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onViewDetails?.(applicant.id)}
-          className="flex-1 justify-center"
-        >
-          <FileText size={14} className="sm:mr-1" />
-          <span className="hidden sm:inline">View Details</span>
-          <span className="sm:hidden">Details</span>
-        </Button>
+        {/* Content */}
+        <div className="px-5 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
+                style={{ backgroundColor: 'rgba(248, 238, 231, 0.1)' }}
+              >
+                <Mail size={16} style={{ color: '#f8eee7' }} />
+              </div>
+              <span className="text-sm truncate" style={{ color: '#f8eee7', opacity: 0.9 }} title={applicant.email}>
+                {applicant.email}
+              </span>
+            </div>
 
-        {applicant.status === 'pending' && (
-          <>
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
+                style={{ backgroundColor: 'rgba(248, 238, 231, 0.1)' }}
+              >
+                <Phone size={16} style={{ color: '#f8eee7' }} />
+              </div>
+              <span className="text-sm truncate" style={{ color: '#f8eee7', opacity: 0.9 }} title={applicant.phone}>
+                {applicant.phone}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
+                style={{ backgroundColor: 'rgba(248, 238, 231, 0.1)' }}
+              >
+                <MapPin size={16} style={{ color: '#f8eee7' }} />
+              </div>
+              <span className="text-sm truncate" style={{ color: '#f8eee7', opacity: 0.9 }} title={applicant.location}>
+                {applicant.location}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
+                style={{ backgroundColor: 'rgba(248, 238, 231, 0.1)' }}
+              >
+                <Briefcase size={16} style={{ color: '#f8eee7' }} />
+              </div>
+              <span className="text-sm truncate" style={{ color: '#f8eee7', opacity: 0.9 }} title={applicant.skills || applicant.experience}>
+                {applicant.skills || applicant.experience}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mb-4 min-w-0">
+            <div
+              className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
+              style={{ backgroundColor: 'rgba(248, 238, 231, 0.1)' }}
+            >
+              <Clock size={16} style={{ color: '#f8eee7' }} />
+            </div>
+            <span className="text-sm" style={{ color: '#f8eee7', opacity: 0.8 }}>
+              Applied on {applicant.appliedDate}
+            </span>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 mt-5">
             <Button
-              variant="primary"
+              variant="secondary"
               size="sm"
-              onClick={() => setShowShortlistModal(true)}
+              onClick={() => onViewDetails?.(applicant.id)}
               className="flex-1 justify-center"
             >
-              Shortlist
+              <FileText size={14} />
+              View Details
             </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setShowRejectModal(true)}
-              className="flex-1 justify-center"
-            >
-              Reject
-            </Button>
-          </>
-        )}
+
+            {applicant.status === 'pending' && (
+              <>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowShortlistModal(true)}
+                  className="flex-1 justify-center"
+                >
+                  Shortlist
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setShowRejectModal(true)}
+                  className="flex-1 justify-center"
+                >
+                  Reject
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
 
     {/* Shortlist Confirmation Modal */}
     <Modal
