@@ -11,6 +11,7 @@ interface ModalProps {
   children?: ReactNode
   showIcon?: boolean
   showCloseButton?: boolean
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 const getVariantStyles = (variant: ModalVariant) => {
@@ -47,9 +48,17 @@ export const Modal = ({
   children,
   showIcon = true,
   showCloseButton = true,
+  maxWidth = 'md',
 }: ModalProps) => {
   const variantStyles = getVariantStyles(variant)
   const Icon = variantStyles.icon
+
+  const maxWidthClasses = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -90,7 +99,7 @@ export const Modal = ({
 
       {/* Modal */}
       <div
-        className="relative rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100 animate-modal-appear overflow-hidden"
+        className={`relative rounded-2xl shadow-2xl ${maxWidthClasses[maxWidth]} w-full transform transition-all duration-300 scale-100 animate-modal-appear overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
         style={{ backgroundColor: '#f8eee7' }}
       >
@@ -142,20 +151,73 @@ export const Modal = ({
 
 // Modal Actions Component (for footer buttons)
 interface ModalActionsProps {
-  children: ReactNode
+  onConfirm?: () => void
+  onCancel?: () => void
+  confirmText?: string
+  cancelText?: string
+  confirmDisabled?: boolean
+  cancelDisabled?: boolean
   align?: 'left' | 'center' | 'right'
+  children?: ReactNode
 }
 
-export const ModalActions = ({ children, align = 'right' }: ModalActionsProps) => {
+export const ModalActions = ({
+  onConfirm,
+  onCancel,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  confirmDisabled = false,
+  cancelDisabled = false,
+  align = 'center',
+  children,
+}: ModalActionsProps) => {
   const alignmentClasses = {
     left: 'justify-start',
     center: 'justify-center',
     right: 'justify-end',
   }
 
+  if (children) {
+    return (
+      <div className={`flex gap-3 mt-4 ${alignmentClasses[align]}`}>
+        {children}
+      </div>
+    )
+  }
+
   return (
-    <div className={`flex gap-3 mt-4 ${alignmentClasses[align]}`}>
-      {children}
+    <div className={`flex gap-3 mt-6 ${alignmentClasses[align]}`}>
+      {onCancel && (
+        <button
+          onClick={onCancel}
+          disabled={cancelDisabled}
+          className="px-6 py-2.5 rounded-lg font-semibold text-base transition-all duration-200 border-2 hover:scale-105"
+          style={{
+            backgroundColor: '#ffffff',
+            color: '#94618e',
+            borderColor: '#94618e',
+            opacity: cancelDisabled ? 0.6 : 1,
+            cursor: cancelDisabled ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {cancelText}
+        </button>
+      )}
+      {onConfirm && (
+        <button
+          onClick={onConfirm}
+          disabled={confirmDisabled}
+          className="px-6 py-2.5 rounded-lg font-semibold text-base transition-all duration-200 hover:scale-105"
+          style={{
+            backgroundColor: confirmDisabled ? '#d1c4cc' : '#94618e',
+            color: '#f8eee7',
+            opacity: confirmDisabled ? 0.6 : 1,
+            cursor: confirmDisabled ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {confirmText}
+        </button>
+      )}
     </div>
   )
 }

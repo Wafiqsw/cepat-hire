@@ -15,6 +15,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
 import { Route as EmployerDashboardRouteImport } from './routes/employer/dashboard'
+import { Route as AuthRegisterRouteImport } from './routes/auth/register'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
@@ -51,6 +53,16 @@ const EmployerPaymentsRoute = EmployerPaymentsRouteImport.update({
 const EmployerDashboardRoute = EmployerDashboardRouteImport.update({
   id: '/employer/dashboard',
   path: '/employer/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
@@ -93,6 +105,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
@@ -108,6 +122,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
@@ -124,6 +140,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/playground': typeof PlaygroundRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
@@ -141,6 +159,8 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/auth/login'
+    | '/auth/register'
     | '/employer/dashboard'
     | '/employer/payments'
     | '/seeker/payments'
@@ -156,6 +176,8 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/auth/login'
+    | '/auth/register'
     | '/employer/dashboard'
     | '/employer/payments'
     | '/seeker/payments'
@@ -171,6 +193,8 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/playground'
+    | '/auth/login'
+    | '/auth/register'
     | '/employer/dashboard'
     | '/employer/payments'
     | '/seeker/payments'
@@ -187,6 +211,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRoute
   PlaygroundRoute: typeof PlaygroundRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
   EmployerDashboardRoute: typeof EmployerDashboardRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
   SeekerPaymentsRoute: typeof SeekerPaymentsRoute
@@ -241,6 +267,20 @@ declare module '@tanstack/react-router' {
       path: '/employer/dashboard'
       fullPath: '/employer/dashboard'
       preLoaderRoute: typeof EmployerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/start/server-funcs': {
@@ -299,6 +339,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRoute,
   PlaygroundRoute: PlaygroundRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
   EmployerDashboardRoute: EmployerDashboardRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,
   SeekerPaymentsRoute: SeekerPaymentsRoute,
