@@ -133,10 +133,23 @@ const tools = [
 
 // Internal queries and mutations for tool execution
 export const _listJobs = internalQuery({
-  args: { status: v.optional(v.string()) },
+  args: {
+    status: v.optional(v.string()),
+    employerId: v.optional(v.id("users")),
+  },
   handler: async (ctx, args) => {
     let jobs;
-    if (args.status) {
+    if (args.employerId) {
+      // Filter by employer
+      jobs = await ctx.db
+        .query("jobs")
+        .withIndex("by_employer", (q) => q.eq("employerId", args.employerId))
+        .collect();
+      // Apply status filter if provided
+      if (args.status) {
+        jobs = jobs.filter((j) => j.status === args.status);
+      }
+    } else if (args.status) {
       jobs = await ctx.db
         .query("jobs")
         .withIndex("by_status", (q) => q.eq("status", args.status as "open" | "closed" | "draft"))
@@ -170,9 +183,11 @@ export const _createJob = internalMutation({
     benefits: v.optional(v.string()),
     isRemote: v.optional(v.boolean()),
     status: v.optional(v.string()),
+    employerId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
     const jobId = await ctx.db.insert("jobs", {
+      employerId: args.employerId,
       title: args.title,
       company: args.company,
       description: args.description,
@@ -222,7 +237,10 @@ export const _deleteJob = internalMutation({
 });
 
 export const _listApplications = internalQuery({
-  args: { jobId: v.optional(v.id("jobs")) },
+  args: {
+    jobId: v.optional(v.id("jobs")),
+    employerId: v.optional(v.id("users")),
+  },
   handler: async (ctx, args) => {
     let applications;
     if (args.jobId) {
@@ -230,6 +248,17 @@ export const _listApplications = internalQuery({
         .query("applications")
         .withIndex("by_job", (q) => q.eq("jobId", args.jobId!))
         .collect();
+    } else if (args.employerId) {
+      // Get all jobs for this employer first
+      const employerJobs = await ctx.db
+        .query("jobs")
+        .withIndex("by_employer", (q) => q.eq("employerId", args.employerId))
+        .collect();
+      const jobIds = new Set(employerJobs.map((j) => j._id));
+
+      // Get all applications and filter by employer's jobs
+      const allApplications = await ctx.db.query("applications").collect();
+      applications = allApplications.filter((app) => jobIds.has(app.jobId));
     } else {
       applications = await ctx.db.query("applications").collect();
     }
@@ -246,6 +275,8 @@ export const _listApplications = internalQuery({
           createdAt: app.createdAt,
           candidateName: candidate?.name || "Unknown",
           candidateEmail: candidate?.email,
+          candidateSkills: candidate?.skills || [],
+          candidateExperience: candidate?.experience || "Not specified",
           jobTitle: job?.title || "Unknown",
         };
       })
@@ -273,11 +304,30 @@ export const _updateApplicationStatus = internalMutation({
 });
 
 export const _getDashboardStats = internalQuery({
-  args: {},
-  handler: async (ctx) => {
-    const jobs = await ctx.db.query("jobs").collect();
-    const applications = await ctx.db.query("applications").collect();
-    const candidates = await ctx.db.query("candidates").collect();
+  args: {
+    employerId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    let jobs;
+    if (args.employerId) {
+      jobs = await ctx.db
+        .query("jobs")
+        .withIndex("by_employer", (q) => q.eq("employerId", args.employerId))
+        .collect();
+    } else {
+      jobs = await ctx.db.query("jobs").collect();
+    }
+
+    const jobIds = new Set(jobs.map((j) => j._id));
+
+    // Get applications for employer's jobs only
+    const allApplications = await ctx.db.query("applications").collect();
+    const applications = args.employerId
+      ? allApplications.filter((app) => jobIds.has(app.jobId))
+      : allApplications;
+
+    // Get unique candidates who applied to employer's jobs
+    const candidateIds = new Set(applications.map((a) => a.candidateId));
 
     const openJobs = jobs.filter((j) => j.status === "open").length;
     const pendingApplications = applications.filter((a) => a.status === "pending").length;
@@ -290,7 +340,8 @@ export const _getDashboardStats = internalQuery({
       pendingApplications,
       reviewedApplications: applications.filter((a) => a.status === "reviewed").length,
       shortlistedApplications: applications.filter((a) => a.status === "shortlisted").length,
-      totalCandidates: candidates.length,
+      hiredCandidates: applications.filter((a) => a.status === "hired").length,
+      totalCandidates: candidateIds.size,
     };
   },
 });
@@ -352,6 +403,7 @@ export const chat = action({
   args: {
     message: v.string(),
     conversationId: v.string(),
+    employerId: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{ response: string }> => {
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -403,9 +455,10 @@ Current date: ${new Date().toLocaleDateString()}`,
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error("Claude API error:", error);
-      throw new Error(`Claude API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error("Claude API error:", errorText);
+      console.error("Messages sent:", JSON.stringify(messages));
+      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
     }
 
     let result: ClaudeResponse = await response.json();
@@ -424,7 +477,8 @@ Current date: ${new Date().toLocaleDateString()}`,
           toolResult = await executeTool(
             ctx,
             toolUse.name!,
-            toolUse.input || {}
+            toolUse.input || {},
+            args.employerId
           );
         } catch (error) {
           toolResult = { error: String(error) };
@@ -1094,12 +1148,14 @@ async function executeSeekerTool(
 async function executeTool(
   ctx: { runQuery: Function; runMutation: Function },
   toolName: string,
-  input: Record<string, unknown>
+  input: Record<string, unknown>,
+  employerId?: string
 ): Promise<unknown> {
   switch (toolName) {
     case "list_jobs":
       return await ctx.runQuery(internal.aiAgent._listJobs, {
         status: input.status as string | undefined,
+        employerId: employerId,
       });
 
     case "create_job":
@@ -1114,6 +1170,7 @@ async function executeTool(
         benefits: input.benefits as string | undefined,
         isRemote: input.isRemote as boolean | undefined,
         status: input.status as string | undefined,
+        employerId: employerId,
       });
 
     case "update_job":
@@ -1139,6 +1196,7 @@ async function executeTool(
     case "list_applications":
       return await ctx.runQuery(internal.aiAgent._listApplications, {
         jobId: input.jobId as string | undefined,
+        employerId: employerId,
       });
 
     case "update_application_status":
@@ -1149,7 +1207,9 @@ async function executeTool(
       });
 
     case "get_dashboard_stats":
-      return await ctx.runQuery(internal.aiAgent._getDashboardStats, {});
+      return await ctx.runQuery(internal.aiAgent._getDashboardStats, {
+        employerId: employerId,
+      });
 
     default:
       throw new Error(`Unknown tool: ${toolName}`);

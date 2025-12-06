@@ -12,18 +12,23 @@ interface Message {
 interface AIChatPopupProps {
   isOpen: boolean
   onClose?: () => void
+  userId?: string
 }
 
-export const AIChatPopup = ({ isOpen, onClose: _onClose }: AIChatPopupProps) => {
+export const AIChatPopup = ({ isOpen, onClose: _onClose, userId }: AIChatPopupProps) => {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [conversationId] = useState(() => `employer-${Date.now()}`)
+  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Fetch conversation history
-  const history = useQuery(api.conversations.getByParticipant, {
-    participantId: conversationId
-  })
+  // Use stable conversationId based on userId
+  const conversationId = userId ? `employer-${userId}` : null
+
+  // Fetch conversation history (skip if no userId yet)
+  const history = useQuery(
+    api.conversations.getByParticipant,
+    conversationId ? { participantId: conversationId } : 'skip'
+  )
 
   // Chat action
   const chat = useAction(api.aiAgent.chat)
@@ -42,19 +47,22 @@ export const AIChatPopup = ({ isOpen, onClose: _onClose }: AIChatPopupProps) => 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
+    if (!input.trim() || isLoading || !conversationId || !userId) return
 
     const userMessage = input.trim()
     setInput('')
     setIsLoading(true)
+    setError(null)
 
     try {
       await chat({
         message: userMessage,
         conversationId,
+        employerId: userId,
       })
-    } catch (error) {
-      console.error('Chat error:', error)
+    } catch (err) {
+      console.error('Chat error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to send message')
     } finally {
       setIsLoading(false)
     }
@@ -157,6 +165,30 @@ export const AIChatPopup = ({ isOpen, onClose: _onClose }: AIChatPopupProps) => 
           </div>
         )}
 
+        {error && (
+          <div className="flex gap-2 justify-start">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#dc2626' }}
+            >
+              <Bot size={16} color="#f8eee7" />
+            </div>
+            <div
+              className="max-w-[75%] px-4 py-2 rounded-2xl rounded-bl-md text-sm"
+              style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}
+            >
+              <p>Error: {error}</p>
+            </div>
+          </div>
+        )}
+
+        {!userId && (
+          <div className="text-center py-4">
+            <Loader2 size={24} className="mx-auto animate-spin" style={{ color: '#94618e' }} />
+            <p className="text-sm mt-2" style={{ color: '#94618e' }}>Loading...</p>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -178,11 +210,11 @@ export const AIChatPopup = ({ isOpen, onClose: _onClose }: AIChatPopupProps) => 
               backgroundColor: '#fff',
               color: '#5a3851',
             }}
-            disabled={isLoading}
+            disabled={isLoading || !userId}
           />
           <button
             type="submit"
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || !userId}
             className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
             style={{ backgroundColor: '#94618e' }}
           >
