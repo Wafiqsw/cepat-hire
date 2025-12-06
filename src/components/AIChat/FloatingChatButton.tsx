@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { MessageCircle, X } from 'lucide-react'
 import { AIChatPopup } from './AIChatPopup'
+import { useAuth } from '../../contexts/AuthContext'
 
 export const FloatingChatButton = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const { user } = useAuth()
 
   return (
     <>
       {/* Chat Popup */}
-      <AIChatPopup isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <AIChatPopup isOpen={isOpen} onClose={() => setIsOpen(false)} userId={user?.id} />
 
       {/* Floating Button - positioned on left side */}
       <button
