@@ -9,6 +9,7 @@ import type { Id } from '../../../convex/_generated/dataModel'
 
 import { JobCard } from '../../components/JobCard'
 import { Modal } from '../../components/Modal'
+import { Loading, Skeleton } from '../../components'
 
 export const Route = createFileRoute('/seeker/browse-jobs')({
   component: RouteComponent,
@@ -250,6 +251,7 @@ const jobDetailsData: Record<string, any> = {
 
 
 function RouteComponent() {
+  const [isLoading, setIsLoading] = useState(true)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([])
   const [selectedLocations, setSelectedLocations] = useState<string[]>([])
@@ -259,6 +261,18 @@ function RouteComponent() {
   const [showApplyModal, setShowApplyModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [aiJobPrompt, setAiJobPrompt] = useState('')
+  const [aiActionType, setAiActionType] = useState<'auto-apply' | 'list-jobs'>('list-jobs')
+  const [aiPromptSubmitted, setAiPromptSubmitted] = useState(false)
+
+  // Simulate API call
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1200)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const handleApply = (jobId: string) => {
+    console.log('Applied to job:', jobId)
+    // TODO: Implement actual apply logic
   const [aiStep, setAiStep] = useState<'prompt' | 'results'>('prompt')
   const [aiMatchingJobs, setAiMatchingJobs] = useState<Array<{
     id: string;
@@ -449,6 +463,34 @@ function RouteComponent() {
     return matchesSearch && matchesJobType && matchesLocation
   })
 
+  if (isLoading) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <main className="flex-1">
+              {/* Header Skeleton */}
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                  <Skeleton variant="text" className="h-9 w-48" />
+                  <Skeleton variant="text" className="h-5 w-32" />
+                </div>
+                <Skeleton variant="rectangle" className="h-12 w-full rounded-xl" />
+              </div>
+
+              {/* AI Section Skeleton */}
+              <Skeleton variant="card" className="h-64 mb-6" />
+
+              {/* Job Cards Grid Skeleton */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} variant="card" className="h-64" />
+                ))}
+              </div>
+
+              {/* Loading Indicator */}
+              <Loading size="lg" text="Loading job listings..." />
+            </main>
   // Loading state
   if (jobs === undefined) {
     return (

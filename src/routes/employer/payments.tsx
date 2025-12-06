@@ -97,11 +97,23 @@ function EmployerPayments() {
           <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
             Payment Management
           </h1>
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
-              Loading...
-            </div>
+
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} variant="card" className="h-32" />
+            ))}
           </div>
+
+          {/* Payment Cards Skeleton */}
+          <div className="space-y-4 mb-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} variant="card" className="h-48" />
+            ))}
+          </div>
+
+          {/* Loading Indicator */}
+          <Loading size="lg" text="Loading payments..." />
         </div>
       </EmployerLayout>
     )

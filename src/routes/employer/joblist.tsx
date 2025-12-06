@@ -4,6 +4,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Button } from '../../components/Button'
 import { JobForm } from '../../components/JobForm'
+import { Loading, Skeleton } from '../../components/Loading'
 import { Plus } from 'lucide-react'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
 import { useAuth } from '../../contexts/AuthContext'
@@ -146,16 +147,23 @@ function RouteComponent() {
   // Loading state
   if (jobs === undefined) {
     return (
-      <div className="w-full max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
-          JOB LIST
-        </h1>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
-            Loading...
+      <EmployerLayout>
+        <div className="w-full max-w-6xl mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
+            JOB LIST
+          </h1>
+
+          {/* Job Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} variant="card" className="h-64" />
+            ))}
           </div>
+
+          {/* Loading Indicator */}
+          <Loading size="lg" text="Loading job listings..." />
         </div>
-      </div>
+      </EmployerLayout>
     )
   }
 
