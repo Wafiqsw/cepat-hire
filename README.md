@@ -1,30 +1,73 @@
+# README
+
 # CEPATHIRE
 
 **Connect Talent with Opportunity**
 
-CEPATHIRE is a modern job hiring platform that connects employers with talented job seekers. Built with cutting-edge web technologies, it provides a seamless experience for posting jobs, browsing opportunities, and managing applications.
+CEPATHIRE is an **AI-powered** job hiring platform that connects employers with talented job seekers. Leveraging cutting-edge agentic AI technology, CEPATHIRE revolutionizes the hiring process by enabling employers to create job postings through simple prompts and allowing job seekers to auto-apply to relevant positions with AI assistance.
 
 ![CEPATHIRE](./src/logo.svg)
+
+CEPATHIRE
+
+## 🤖 AI-Powered Features
+
+### Agentic AI for Employers
+
+**Create Job Postings with Natural Language Prompts**
+
+Forget complex forms! Simply describe what you’re looking for, and our AI agent will:
+- Generate complete, professional job descriptions
+- Suggest appropriate salary ranges based on market data
+- Recommend required skills and qualifications
+- Format and structure the posting automatically
+
+**Example Prompt:**
+> “I need a part-time worker for my data entry project.”
+
+The AI instantly creates a comprehensive job posting ready to publish!
+
+### Agentic AI for Job Seekers
+
+**Auto-Apply to Jobs with AI Assistance**
+
+Our intelligent agent streamlines your job search:
+- **Smart Job Discovery** - AI analyzes your profile and suggests matching opportunities
+- **Automated Applications** - Simply prompt the AI to apply to jobs that match your criteria
+
+**Example Prompt:**
+> “Apply to all React developer positions in remote locations with salary above $100k”
+
+The AI finds matching jobs and submits applications on your behalf!
 
 ## 🌟 Features
 
 ### For Employers
-- **Post Jobs Easily** - Create and manage job postings in minutes
+
+- **🤖 AI Job Posting Creation** - Create complete job postings using natural language prompts
+- **Post Jobs in Seconds** - No complex forms - just describe what you need
+- **AI-Generated Descriptions** - Professional job descriptions created automatically
 - **Find Top Talent** - Connect with skilled professionals ready to join your team
-- **Smart Matching** - Algorithm-based candidate matching
+- **Smart Matching** - AI-powered candidate matching algorithm
 - **Applicant Management** - Review and manage job applications efficiently
-- **Payment Integration** - Secure payment processing for job postings
 
 ### For Job Seekers
+
+- **🤖 AI Auto-Apply** - Apply to multiple jobs automatically with simple prompts
+- **AI Job Matching** - Get personalized job recommendations based on your profile
+- **Smart Job Discovery** - AI analyzes and suggests the best opportunities for you
+- **Automated Cover Letters** - AI generates tailored cover letters for each application
 - **Browse Jobs** - Search and filter through thousands of job opportunities
-- **Smart Matching** - Get matched with relevant job opportunities
-- **Application Tracking** - Track all your job applications in one place
+- **Application Tracking** - Track all your AI-assisted and manual applications
 - **Save Jobs** - Bookmark interesting positions for later
 - **Profile Management** - Create and update your professional profile
 - **Work History** - Showcase your experience and skills
 
 ### Platform Features
-- **Secure Authentication** - Enterprise-level security for user data
+
+- **Agentic AI Technology** - Advanced AI agents that understand and execute complex tasks
+- **Natural Language Processing** - Communicate with the platform using everyday language
+- **Secure Authentication** - Security for user data
 - **Real-time Updates** - Powered by Convex for real-time data synchronization
 - **Responsive Design** - Works seamlessly on desktop and mobile devices
 - **Modern UI** - Built with Tailwind CSS for a beautiful user experience
@@ -52,34 +95,38 @@ Before you begin, ensure you have the following installed:
 ## 🛠️ Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd cepat-hire
-   ```
-
+    
+    ```bash
+    git clone <repository-url>cd cepat-hire
+    ```
+    
 2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
+    
+    ```bash
+    npm install
+    ```
+    
 3. **Set up environment variables**
-   
-   Create a `.env.local` file in the root directory and add your Convex configuration:
-   ```env
-   VITE_CONVEX_URL=your_convex_url_here
-   ```
-
+    
+    Create a `.env.local` file in the root directory and add your Convex configuration:
+    
+    ```
+    VITE_CONVEX_URL=your_convex_url_here
+    ```
+    
 4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-   The application will be available at `http://localhost:3000`
+    
+    ```bash
+    npm run dev
+    ```
+    
+    The application will be available at `http://localhost:3000`
+    
 
 ## 📦 Available Scripts
 
 | Script | Description |
-|--------|-------------|
+| --- | --- |
 | `npm run dev` | Start development server on port 3000 |
 | `npm run build` | Build for production |
 | `npm run serve` | Preview production build |
@@ -196,7 +243,7 @@ The optimized build will be in the `dist/` directory.
 ## 📱 Key Routes
 
 | Route | Description |
-|-------|-------------|
+| --- | --- |
 | `/` | Landing page with platform overview |
 | `/auth/login` | User login |
 | `/auth/register` | User registration |
@@ -233,16 +280,21 @@ npm run check
 ## 🐛 Troubleshooting
 
 ### Port Already in Use
+
 If port 3000 is already in use, modify the dev script in `package.json`:
+
 ```json
 "dev": "vite dev --port 3001"
 ```
 
 ### Convex Connection Issues
+
 Ensure your `.env.local` file has the correct `VITE_CONVEX_URL` value from your Convex dashboard.
 
 ### Build Errors
+
 Clear the cache and reinstall dependencies:
+
 ```bash
 rm -rf node_modules package-lock.json
 npm install
@@ -252,10 +304,10 @@ npm install
 
 - [TanStack Router Documentation](https://tanstack.com/router)
 - [TanStack Query Documentation](https://tanstack.com/query)
-- [Convex Documentation](https://docs.convex.dev)
-- [Tailwind CSS Documentation](https://tailwindcss.com)
-- [Vite Documentation](https://vitejs.dev)
-- [React Documentation](https://react.dev)
+- [Convex Documentation](https://docs.convex.dev/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/)
+- [Vite Documentation](https://vitejs.dev/)
+- [React Documentation](https://react.dev/)
 
 ## 📄 License
 
