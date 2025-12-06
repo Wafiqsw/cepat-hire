@@ -90,7 +90,7 @@ export const Modal = ({
 
       {/* Modal */}
       <div
-        className="relative rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100 animate-modal-appear overflow-hidden"
+        className="relative rounded-2xl shadow-2xl max-w-4xl w-full transform transition-all duration-300 scale-100 animate-modal-appear overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         style={{ backgroundColor: '#f8eee7' }}
       >
@@ -122,7 +122,7 @@ export const Modal = ({
         )}
 
         {/* Content */}
-        <div className="px-8 pb-8 text-center">
+        <div className="px-8 pb-8 pt-16 text-center">
           {title && (
             <h3
               className="text-2xl font-bold mb-4"

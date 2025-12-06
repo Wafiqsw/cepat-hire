@@ -13,6 +13,7 @@ import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
+import { Route as SeekerJobDetailsModalRouteImport } from './routes/seeker/JobDetailsModal'
 import { Route as SeekerHomeRouteImport } from './routes/seeker/Home'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
 const SeekerPaymentsRoute = SeekerPaymentsRouteImport.update({
   id: '/seeker/payments',
   path: '/seeker/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerJobDetailsModalRoute = SeekerJobDetailsModalRouteImport.update({
+  id: '/seeker/JobDetailsModal',
+  path: '/seeker/JobDetailsModal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SeekerHomeRoute = SeekerHomeRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/playground': typeof PlaygroundRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/Home': typeof SeekerHomeRoute
+  '/seeker/JobDetailsModal': typeof SeekerJobDetailsModalRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/playground': typeof PlaygroundRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/Home': typeof SeekerHomeRoute
+  '/seeker/JobDetailsModal': typeof SeekerJobDetailsModalRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/playground': typeof PlaygroundRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/Home': typeof SeekerHomeRoute
+  '/seeker/JobDetailsModal': typeof SeekerJobDetailsModalRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/employer/payments'
     | '/seeker/Home'
+    | '/seeker/JobDetailsModal'
     | '/seeker/payments'
     | '/demo/api/names'
     | '/demo/start/api-request'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/employer/payments'
     | '/seeker/Home'
+    | '/seeker/JobDetailsModal'
     | '/seeker/payments'
     | '/demo/api/names'
     | '/demo/start/api-request'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/employer/payments'
     | '/seeker/Home'
+    | '/seeker/JobDetailsModal'
     | '/seeker/payments'
     | '/demo/api/names'
     | '/demo/start/api-request'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   PlaygroundRoute: typeof PlaygroundRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
   SeekerHomeRoute: typeof SeekerHomeRoute
+  SeekerJobDetailsModalRoute: typeof SeekerJobDetailsModalRoute
   SeekerPaymentsRoute: typeof SeekerPaymentsRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/seeker/payments'
       fullPath: '/seeker/payments'
       preLoaderRoute: typeof SeekerPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/JobDetailsModal': {
+      id: '/seeker/JobDetailsModal'
+      path: '/seeker/JobDetailsModal'
+      fullPath: '/seeker/JobDetailsModal'
+      preLoaderRoute: typeof SeekerJobDetailsModalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/seeker/Home': {
@@ -301,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlaygroundRoute: PlaygroundRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,
   SeekerHomeRoute: SeekerHomeRoute,
+  SeekerJobDetailsModalRoute: SeekerJobDetailsModalRoute,
   SeekerPaymentsRoute: SeekerPaymentsRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
