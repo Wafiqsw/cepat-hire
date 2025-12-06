@@ -144,15 +144,70 @@ function RouteComponent() {
       </div>
 
       {/* Jobs Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {mockJobs.map((job) => (
-          <JobCard
+          <div
             key={job.id}
-            variant="employer"
-            job={job}
-            onEdit={handleEditJob}
-            onDelete={handleDeleteJob}
-          />
+            className="rounded-2xl overflow-hidden border-2 shadow-lg hover:shadow-2xl transition-all duration-300"
+            style={{
+              backgroundColor: '#f8eee7',
+              borderColor: '#94618e',
+            }}
+          >
+            {/* Job Image with Title Overlay */}
+            <div className="relative w-full h-48 overflow-hidden">
+              <img
+                src={job.image}
+                alt={job.title}
+                className="w-full h-full object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(90,56,81,0.9) 100%)',
+                }}
+              />
+              {/* Job Title Overlay */}
+              <div className="absolute bottom-6 left-6 right-6">
+                <h3 className="text-2xl font-bold text-white mb-1">
+                  {job.title}
+                </h3>
+              </div>
+            </div>
+
+            {/* Card Content */}
+            <div
+              className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              style={{ backgroundColor: '#5a3851' }}
+            >
+              <div>
+                <p className="text-base font-semibold mb-1" style={{ color: '#f8eee7' }}>
+                  {job.company}
+                </p>
+                <p className="text-sm" style={{ color: '#f8eee7', opacity: 0.8 }}>
+                  {job.location} • {job.type} • {job.salary}
+                </p>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleEditJob(job.id)}
+                  className="flex-1 sm:flex-none"
+                >
+                  EDIT
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDeleteJob(job.id)}
+                  className="flex-1 sm:flex-none"
+                >
+                  DELETE
+                </Button>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
