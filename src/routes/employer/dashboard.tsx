@@ -1,10 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Button } from '../../components/Button'
 import { JobCard } from '../../components/JobCard'
 import { ApplicantCard } from '../../components/ApplicantCard'
+import { Loading, Skeleton } from '../../components/Loading'
 import { EmployerLayout } from '../../layouts/EmployerLayout'
+import { ArrowRight } from 'lucide-react'
 import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/dashboard')({
@@ -34,6 +36,8 @@ function formatDate(timestamp: number): string {
 }
 
 function RouteComponent() {
+  const navigate = useNavigate()
+
   // Fetch data from Convex
   const stats = useQuery(api.applications.getStats)
   const jobs = useQuery(api.jobs.list, { status: 'open' })
@@ -68,6 +72,10 @@ function RouteComponent() {
     appliedDate: formatDate(app.createdAt),
     status: app.status as 'pending' | 'reviewed' | 'shortlisted' | 'rejected',
   })) || []
+
+  // Limit to 3 items for dashboard display
+  const limitedJobs = jobsForDisplay.slice(0, 3)
+  const limitedApplicants = applicantsForDisplay.slice(0, 3)
 
   const handleEditJob = (id: string) => {
     console.log('Edit job:', id)
@@ -112,16 +120,43 @@ function RouteComponent() {
   // Loading state
   if (!stats || !jobs || !applicationsWithDetails) {
     return (
-      <div className="w-full max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
-          DASHBOARD
-        </h1>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
-            Loading...
+      <EmployerLayout>
+        <div className="w-full max-w-6xl mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
+            DASHBOARD
+          </h1>
+
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} variant="card" className="h-32" />
+            ))}
           </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton variant="card" className="h-24" />
+              <div className="space-y-4">
+                <Skeleton variant="card" />
+                <Skeleton variant="card" />
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="lg:col-span-1">
+              <div className="space-y-4">
+                <Skeleton variant="card" />
+                <Skeleton variant="card" />
+              </div>
+            </div>
+          </div>
+
+          {/* Centered Loading Indicator */}
+          <Loading size="lg" text="Loading dashboard data..." />
         </div>
-      </div>
+      </EmployerLayout>
     )
   }
 
@@ -195,6 +230,7 @@ function RouteComponent() {
                   variant="primary"
                   size="md"
                   className="w-full sm:w-auto"
+                  onClick={() => navigate({ to: '/employer/joblist' })}
                 >
                   CREATE A NEW JOB
                 </Button>
@@ -203,14 +239,26 @@ function RouteComponent() {
 
             {/* Posted Jobs Section */}
             <div>
-              <h2
-                className="text-sm font-bold uppercase mb-3 tracking-wide"
-                style={{ color: '#5a3851' }}
-              >
-                POSTED JOB{jobsForDisplay.length !== 1 ? 'S' : ''} ({jobsForDisplay.length})
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2
+                  className="text-sm font-bold uppercase tracking-wide"
+                  style={{ color: '#5a3851' }}
+                >
+                  POSTED JOB{jobsForDisplay.length !== 1 ? 'S' : ''} ({jobsForDisplay.length})
+                </h2>
+                {jobsForDisplay.length > 3 && (
+                  <button
+                    onClick={() => navigate({ to: '/employer/joblist' })}
+                    className="flex items-center gap-1 text-sm font-semibold transition-all duration-200 hover:gap-2"
+                    style={{ color: '#94618e' }}
+                  >
+                    View More
+                    <ArrowRight size={16} />
+                  </button>
+                )}
+              </div>
               <div className="space-y-4">
-                {jobsForDisplay.length === 0 ? (
+                {limitedJobs.length === 0 ? (
                   <div
                     className="rounded-xl p-6 text-center"
                     style={{ backgroundColor: '#f8eee7', color: '#94618e' }}
@@ -218,7 +266,7 @@ function RouteComponent() {
                     No jobs posted yet. Create your first job posting!
                   </div>
                 ) : (
-                  jobsForDisplay.map((job) => (
+                  limitedJobs.map((job) => (
                     <JobCard
                       key={job.id}
                       variant="employer"
@@ -234,14 +282,26 @@ function RouteComponent() {
 
           {/* Right Column - Applications Panel */}
           <div className="lg:col-span-1">
-            <h2
-              className="text-sm font-bold uppercase mb-3 tracking-wide"
-              style={{ color: '#5a3851' }}
-            >
-              APPLICATION{applicantsForDisplay.length !== 1 ? 'S' : ''} ({applicantsForDisplay.length})
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2
+                className="text-sm font-bold uppercase tracking-wide"
+                style={{ color: '#5a3851' }}
+              >
+                APPLICATION{applicantsForDisplay.length !== 1 ? 'S' : ''} ({applicantsForDisplay.length})
+              </h2>
+              {applicantsForDisplay.length > 3 && (
+                <button
+                  onClick={() => navigate({ to: '/employer/applications' })}
+                  className="flex items-center gap-1 text-sm font-semibold transition-all duration-200 hover:gap-2"
+                  style={{ color: '#94618e' }}
+                >
+                  View More
+                  <ArrowRight size={16} />
+                </button>
+              )}
+            </div>
             <div className="space-y-4">
-              {applicantsForDisplay.length === 0 ? (
+              {limitedApplicants.length === 0 ? (
                 <div
                   className="rounded-xl p-6 text-center"
                   style={{ backgroundColor: '#f8eee7', color: '#94618e' }}
@@ -249,7 +309,7 @@ function RouteComponent() {
                   No applications yet.
                 </div>
               ) : (
-                applicantsForDisplay.map((applicant) => (
+                limitedApplicants.map((applicant) => (
                   <ApplicantCard
                     key={applicant.id}
                     applicant={applicant}
@@ -264,6 +324,6 @@ function RouteComponent() {
         </div>
       </div>
     </EmployerLayout>
-    
+
   )
 }

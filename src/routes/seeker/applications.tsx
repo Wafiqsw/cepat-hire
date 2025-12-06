@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Filter, Briefcase, MapPin, Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Loading, Skeleton } from '../../components'
 
 export const Route = createFileRoute('/seeker/applications')({
   component: ApplicationsPage,
@@ -23,6 +24,13 @@ interface Application {
 
 function ApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('pending')
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simulate API call
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1200)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Mock application data
   const applications: Application[] = [
@@ -123,6 +131,35 @@ function ApplicationsPage() {
     accepted: applications.filter(a => a.status === 'accepted').length,
     rejected: applications.filter(a => a.status === 'rejected').length,
     interviewing: applications.filter(a => a.status === 'interviewing').length,
+  }
+
+  if (isLoading) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold mb-8" style={{ color: '#94618e' }}>
+            My Applications
+          </h1>
+
+          {/* Filter Tabs Skeleton */}
+          <div className="flex gap-2 mb-6 overflow-x-auto">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} variant="rectangle" className="h-10 w-24" />
+            ))}
+          </div>
+
+          {/* Application Cards Skeleton */}
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} variant="card" className="h-48" />
+            ))}
+          </div>
+
+          {/* Loading Indicator */}
+          <Loading size="lg" text="Loading applications..." />
+        </div>
+      </SeekerLayout>
+    )
   }
 
   return (

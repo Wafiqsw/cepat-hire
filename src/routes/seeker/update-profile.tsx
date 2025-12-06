@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
-import { useState } from 'react'
-import { AvatarPlaceholder, Button, Input } from '../../components'
+import { useState, useEffect } from 'react'
+import { AvatarPlaceholder, Button, Input, Loading, Skeleton } from '../../components'
 import { ArrowLeft, Save } from 'lucide-react'
 
 export const Route = createFileRoute('/seeker/update-profile')({
@@ -10,6 +10,13 @@ export const Route = createFileRoute('/seeker/update-profile')({
 
 function UpdateProfilePage() {
   const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simulate API call
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Form state
   const [formData, setFormData] = useState({
@@ -29,6 +36,53 @@ function UpdateProfilePage() {
 
   const handleCancel = () => {
     navigate({ to: '/seeker/profile' })
+  }
+
+  if (isLoading) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          {/* Header Skeleton */}
+          <div className="mb-8">
+            <Skeleton variant="text" className="h-6 w-32 mb-4" />
+            <Skeleton variant="text" className="h-9 w-40 mb-2" />
+            <Skeleton variant="text" className="h-6 w-56" />
+          </div>
+
+          {/* Form Skeleton */}
+          <div className="p-8 rounded-2xl border-2 mb-6" style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}>
+            {/* Avatar Skeleton */}
+            <div className="mb-8 flex flex-col items-center">
+              <Skeleton variant="circle" className="w-32 h-32 mb-3" />
+              <Skeleton variant="text" className="h-4 w-48" />
+            </div>
+
+            {/* Form Fields Skeleton */}
+            <div className="space-y-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i}>
+                  <Skeleton variant="text" className="h-5 w-24 mb-2" />
+                  <Skeleton variant="rectangle" className="h-12 w-full rounded-xl" />
+                </div>
+              ))}
+              <div>
+                <Skeleton variant="text" className="h-5 w-24 mb-2" />
+                <Skeleton variant="rectangle" className="h-24 w-full rounded-xl" />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons Skeleton */}
+          <div className="grid grid-cols-2 gap-4">
+            <Skeleton variant="rectangle" className="h-12 rounded-xl" />
+            <Skeleton variant="rectangle" className="h-12 rounded-xl" />
+          </div>
+
+          {/* Loading Indicator */}
+          <Loading size="lg" text="Loading profile editor..." />
+        </div>
+      </SeekerLayout>
+    )
   }
 
   return (

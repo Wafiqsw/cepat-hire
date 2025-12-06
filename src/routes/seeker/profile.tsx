@@ -5,8 +5,11 @@ import {
   WalletCard,
   Button,
   AvatarPlaceholder,
+  Loading,
+  Skeleton,
 } from '../../components'
 import { Mail, Phone, MapPin, Calendar, Edit, Briefcase } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 export const Route = createFileRoute('/seeker/profile')({
   component: ProfilePage,
@@ -14,6 +17,13 @@ export const Route = createFileRoute('/seeker/profile')({
 
 function ProfilePage() {
   const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simulate API call
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1300)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Mock data - replace with real data from API
   const profileData = {
@@ -57,6 +67,33 @@ function ProfilePage() {
       isCurrentJob: false,
     },
   ]
+
+  if (isLoading) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto space-y-8 px-4 py-6">
+          {/* Profile and Wallet Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+            <Skeleton variant="card" className="h-96" />
+            <Skeleton variant="card" className="h-96" />
+          </div>
+
+          {/* Work History Skeleton */}
+          <div>
+            <Skeleton variant="text" className="h-8 w-48 mb-6" />
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} variant="card" className="h-32" />
+              ))}
+            </div>
+          </div>
+
+          {/* Loading Indicator */}
+          <Loading size="lg" text="Loading profile..." />
+        </div>
+      </SeekerLayout>
+    )
+  }
 
   return (
     <SeekerLayout>

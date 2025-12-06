@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
 import { Briefcase, Wallet, Bookmark, User, TrendingUp, Clock } from 'lucide-react'
-import { Button } from '../../components'
+import { Button, Loading, Skeleton } from '../../components'
+import { useState, useEffect } from 'react'
 
 export const Route = createFileRoute('/seeker/dashboard')({
   component: DashboardPage,
@@ -9,6 +10,13 @@ export const Route = createFileRoute('/seeker/dashboard')({
 
 function DashboardPage() {
   const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simulate API call
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1500)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Summary stats
   const stats = {
@@ -60,6 +68,43 @@ function DashboardPage() {
       interviewing: '#3b82f6',
     }
     return colors[status as keyof typeof colors] || '#94618e'
+  }
+
+  if (isLoading) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold mb-8" style={{ color: '#94618e' }}>
+            Dashboard
+          </h1>
+
+          {/* Stats Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} variant="card" className="h-40" />
+            ))}
+          </div>
+
+          {/* Recent Applications Skeleton */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: '#94618e' }}>
+              Recent Applications
+            </h2>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} variant="card" className="h-20" />
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Actions Skeleton */}
+          <Skeleton variant="card" className="h-32" />
+
+          {/* Loading Indicator */}
+          <Loading size="lg" text="Loading dashboard..." />
+        </div>
+      </SeekerLayout>
+    )
   }
 
   return (

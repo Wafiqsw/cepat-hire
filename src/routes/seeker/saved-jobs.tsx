@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bookmark, MapPin, DollarSign, Clock, X } from 'lucide-react'
-import { Button } from '../../components'
+import { Button, Loading, Skeleton } from '../../components'
 
 export const Route = createFileRoute('/seeker/saved-jobs')({
   component: SavedJobsPage,
@@ -20,6 +20,7 @@ interface SavedJob {
 }
 
 function SavedJobsPage() {
+  const [isLoading, setIsLoading] = useState(true)
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([
     {
       id: '1',
@@ -63,8 +64,38 @@ function SavedJobsPage() {
     },
   ])
 
+  // Simulate API call
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1100)
+    return () => clearTimeout(timer)
+  }, [])
+
   const handleUnsave = (jobId: string) => {
     setSavedJobs(savedJobs.filter(job => job.id !== jobId))
+  }
+
+  if (isLoading) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          {/* Header Skeleton */}
+          <div className="mb-8">
+            <Skeleton variant="text" className="h-9 w-48 mb-2" />
+            <Skeleton variant="text" className="h-6 w-32" />
+          </div>
+
+          {/* Jobs List Skeleton */}
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} variant="card" className="h-48" />
+            ))}
+          </div>
+
+          {/* Loading Indicator */}
+          <Loading size="lg" text="Loading saved jobs..." />
+        </div>
+      </SeekerLayout>
+    )
   }
 
   return (

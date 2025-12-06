@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { SeekerLayout } from '../../layouts/SeekerLayout'
-import { PaymentCard, Modal, ModalActions, Button } from '../../components'
+import { PaymentCard, Modal, ModalActions, Button, Loading, Skeleton } from '../../components'
 import { Wallet, Clock, CheckCircle, AlertCircle, Filter, Building2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export const Route = createFileRoute('/seeker/payments')({
   component: SeekerPayments,
@@ -13,6 +13,13 @@ function SeekerPayments() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [accountNumber, setAccountNumber] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simulate API call
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1000)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Malaysian banks
   const malaysianBanks = [
@@ -93,6 +100,35 @@ function SeekerPayments() {
 
   const totalBalance = completedEarnings + pendingEarnings
   const availableToWithdraw = completedEarnings * 0.95 // 95% available, 5% held for early withdrawal
+
+  if (isLoading) {
+    return (
+      <SeekerLayout>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <h1 className="text-3xl font-bold mb-8" style={{ color: '#94618e' }}>
+            My Wallet
+          </h1>
+
+          {/* Wallet Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} variant="card" className="h-40" />
+            ))}
+          </div>
+
+          {/* Payments Skeleton */}
+          <div className="space-y-4 mb-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} variant="card" className="h-32" />
+            ))}
+          </div>
+
+          {/* Loading Indicator */}
+          <Loading size="lg" text="Loading wallet..." />
+        </div>
+      </SeekerLayout>
+    )
+  }
 
   return (
     <SeekerLayout>

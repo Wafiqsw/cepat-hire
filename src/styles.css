@@ -67,3 +67,13 @@ textarea:-ms-input-placeholder {
   color: #b8a0b3 !important;
   opacity: 0.6 !important;
 }
+
+/* Shimmer Animation for Skeleton Loaders */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
