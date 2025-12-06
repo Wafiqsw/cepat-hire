@@ -11,42 +11,100 @@ export const seedData = mutation({
 
     // Create sample jobs
     const job1 = await ctx.db.insert("jobs", {
-      title: "Senior Frontend Developer",
-      company: "Tech Corp",
+      title: "Part-Time Barista",
+      company: "Cafe Delight",
       description:
-        "We are looking for an experienced frontend developer to join our team. You will work on building modern web applications using React and TypeScript.",
-      requirements: ["React", "TypeScript", "CSS", "3+ years experience"],
-      location: "Kuala Lumpur",
-      salary: "RM 8,000 - RM 12,000",
-      type: "Full-time",
+        "Join our friendly team! Make delicious coffee and serve customers. Flexible hours, weekends available. No experience needed, training provided.",
+      requirements: ["Customer Service", "Team Player", "Flexible Schedule"],
+      location: "Kuala Lumpur, Malaysia",
+      salary: "RM 10 - RM 15/hour",
+      type: "Part-time",
+      benefits: "Free coffee, flexible hours, tips included",
+      image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80",
+      isRemote: false,
       status: "open",
-      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000, // 2 days ago
+      createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
     });
 
     const job2 = await ctx.db.insert("jobs", {
-      title: "Backend Engineer",
-      company: "Innovation Labs",
+      title: "Retail Sales Assistant",
+      company: "Fashion Outlet",
       description:
-        "Join our backend team to build scalable APIs and services. Experience with Node.js and databases required.",
-      requirements: ["Node.js", "PostgreSQL", "REST APIs", "Docker"],
-      location: "Penang",
-      salary: "RM 7,000 - RM 10,000",
-      type: "Full-time",
+        "Help customers find perfect outfits. Part-time position with flexible schedule. Great for students. Commission available on sales.",
+      requirements: ["Communication Skills", "Fashion Interest", "Sales Experience"],
+      location: "Penang, Malaysia",
+      salary: "RM 8 - RM 12/hour",
+      type: "Part-time",
+      benefits: "Staff discount, commission on sales",
+      image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
+      isRemote: false,
       status: "open",
-      createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000, // 5 days ago
+      createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
     });
 
     const job3 = await ctx.db.insert("jobs", {
-      title: "UI/UX Designer",
-      company: "Design Studio",
+      title: "Food Delivery Rider",
+      company: "Quick Eats",
       description:
-        "Create beautiful user experiences for our clients. Looking for someone with strong portfolio.",
-      requirements: ["Figma", "Adobe XD", "UI Design", "User Research"],
-      location: "Remote",
-      salary: "RM 5,000 - RM 8,000",
-      type: "Contract",
+        "Deliver food to customers. Own motorcycle required. Flexible working hours, choose your own schedule. Earn extra with tips and bonuses.",
+      requirements: ["Motorcycle License", "Smartphone", "Know Local Area"],
+      location: "Selangor, Malaysia",
+      salary: "RM 12 - RM 18/hour",
+      type: "Part-time",
+      benefits: "Flexible hours, tips, bonuses for high performance",
+      image: "https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&q=80",
+      isRemote: false,
       status: "open",
-      createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000, // 1 week ago
+      createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
+    });
+
+    // Additional jobs for variety
+    const job4 = await ctx.db.insert("jobs", {
+      title: "Tutor - Mathematics",
+      company: "Learning Center",
+      description:
+        "Teach mathematics to secondary school students. Flexible hours, weekend classes available. Must have strong math background.",
+      requirements: ["Math Degree", "Teaching Experience", "Patient"],
+      location: "Kuala Lumpur, Malaysia",
+      salary: "RM 25 - RM 40/hour",
+      type: "Part-time",
+      benefits: "Flexible schedule, rewarding work",
+      image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80",
+      isRemote: false,
+      status: "open",
+      createdAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
+    });
+
+    const job5 = await ctx.db.insert("jobs", {
+      title: "Warehouse Packer",
+      company: "Logistics Hub",
+      description:
+        "Pack and prepare orders for shipment. Morning or evening shifts available. Physical work, good for staying active. Weekly pay.",
+      requirements: ["Physical Fitness", "Attention to Detail", "Reliable"],
+      location: "Johor Bahru, Malaysia",
+      salary: "RM 9 - RM 13/hour",
+      type: "Part-time",
+      benefits: "Weekly pay, overtime available",
+      image: "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80",
+      isRemote: false,
+      status: "open",
+      createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
+    });
+
+    const job6 = await ctx.db.insert("jobs", {
+      title: "Restaurant Server",
+      company: "Family Dining",
+      description:
+        "Serve customers in a friendly family restaurant. Evening and weekend shifts. Tips included. Great team environment.",
+      requirements: ["Customer Service", "Team Player", "Weekend Availability"],
+      location: "Petaling Jaya, Malaysia",
+      salary: "RM 10 - RM 14/hour",
+      type: "Part-time",
+      benefits: "Tips, free meals, great team",
+      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
+      isRemote: false,
+      status: "open",
+      createdAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
     });
 
     // Create sample candidates
@@ -114,7 +172,7 @@ export const seedData = mutation({
 
     return {
       message: "Seed data created successfully",
-      jobs: 3,
+      jobs: 6,
       candidates: 3,
       applications: 3,
     };

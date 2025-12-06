@@ -28,6 +28,9 @@ export default defineSchema({
     location: v.optional(v.string()),
     salary: v.optional(v.string()),
     type: v.optional(v.string()), // Full-time, Part-time, Contract, etc.
+    benefits: v.optional(v.string()),
+    image: v.optional(v.string()),
+    isRemote: v.optional(v.boolean()),
     status: v.union(v.literal("open"), v.literal("closed"), v.literal("draft")),
     createdAt: v.number(),
   }).index("by_status", ["status"]),

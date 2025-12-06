@@ -33,6 +33,10 @@ export const create = mutation({
     requirements: v.array(v.string()),
     location: v.optional(v.string()),
     salary: v.optional(v.string()),
+    type: v.optional(v.string()),
+    benefits: v.optional(v.string()),
+    image: v.optional(v.string()),
+    isRemote: v.optional(v.boolean()),
     status: v.optional(
       v.union(v.literal("open"), v.literal("closed"), v.literal("draft"))
     ),
@@ -55,6 +59,10 @@ export const update = mutation({
     requirements: v.optional(v.array(v.string())),
     location: v.optional(v.string()),
     salary: v.optional(v.string()),
+    type: v.optional(v.string()),
+    benefits: v.optional(v.string()),
+    image: v.optional(v.string()),
+    isRemote: v.optional(v.boolean()),
     status: v.optional(
       v.union(v.literal("open"), v.literal("closed"), v.literal("draft"))
     ),

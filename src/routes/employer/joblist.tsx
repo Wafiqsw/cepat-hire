@@ -1,87 +1,54 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { Button } from '../../components/Button'
-import { JobCard } from '../../components/JobCard'
 import { JobForm } from '../../components/JobForm'
 import { Plus } from 'lucide-react'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/employer/joblist')({
   component: RouteComponent,
 })
 
+// Helper to format relative time
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now()
+  const diff = now - timestamp
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (days === 0) return 'Today'
+  if (days === 1) return '1 day ago'
+  if (days < 7) return `${days} days ago`
+  if (days < 14) return '1 week ago'
+  return `${Math.floor(days / 7)} weeks ago`
+}
+
+interface JobFormData {
+  title: string
+  company: string
+  location: string
+  type: string
+  salary: string
+  description: string
+  requirements: string
+  benefits: string
+  isRemote: boolean
+  isActive: boolean
+  image?: string
+}
+
 function RouteComponent() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingJob, setEditingJob] = useState<any>(null)
 
-  // Mock data - will be replaced with backend data
-  const mockJobs = [
-    {
-      id: '1',
-      title: 'Part-Time Barista',
-      company: 'Cafe Delight',
-      location: 'Kuala Lumpur, Malaysia',
-      type: 'Part-time',
-      salary: 'RM 10 - RM 15/hour',
-      postedDate: '2 days ago',
-      description: 'Join our friendly team! Make delicious coffee and serve customers. Flexible hours, weekends available. No experience needed, training provided.',
-      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80',
-    },
-    {
-      id: '2',
-      title: 'Retail Sales Assistant',
-      company: 'Fashion Outlet',
-      location: 'Penang, Malaysia',
-      type: 'Part-time',
-      salary: 'RM 8 - RM 12/hour',
-      postedDate: '5 days ago',
-      description: 'Help customers find perfect outfits. Part-time position with flexible schedule. Great for students. Commission available on sales.',
-      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
-    },
-    {
-      id: '3',
-      title: 'Food Delivery Rider',
-      company: 'Quick Eats',
-      location: 'Selangor, Malaysia',
-      type: 'Part-time',
-      salary: 'RM 12 - RM 18/hour',
-      postedDate: '1 week ago',
-      description: 'Deliver food to customers. Own motorcycle required. Flexible working hours, choose your own schedule. Earn extra with tips and bonuses.',
-      image: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=800&q=80',
-    },
-    {
-      id: '4',
-      title: 'Tutor - Mathematics',
-      company: 'Learning Center',
-      location: 'Kuala Lumpur, Malaysia',
-      type: 'Part-time',
-      salary: 'RM 25 - RM 40/hour',
-      postedDate: '3 days ago',
-      description: 'Teach mathematics to secondary school students. Flexible hours, weekend classes available. Must have strong math background.',
-      image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
-    },
-    {
-      id: '5',
-      title: 'Warehouse Packer',
-      company: 'Logistics Hub',
-      location: 'Johor Bahru, Malaysia',
-      type: 'Part-time',
-      salary: 'RM 9 - RM 13/hour',
-      postedDate: '1 day ago',
-      description: 'Pack and prepare orders for shipment. Morning or evening shifts available. Physical work, good for staying active. Weekly pay.',
-      image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80',
-    },
-    {
-      id: '6',
-      title: 'Restaurant Server',
-      company: 'Family Dining',
-      location: 'Petaling Jaya, Malaysia',
-      type: 'Part-time',
-      salary: 'RM 10 - RM 14/hour',
-      postedDate: '4 days ago',
-      description: 'Serve customers in a friendly family restaurant. Evening and weekend shifts. Tips included. Great team environment.',
-      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
-    },
-  ]
+  // Fetch jobs from Convex
+  const jobs = useQuery(api.jobs.list, {})
+
+  // Mutations
+  const createJob = useMutation(api.jobs.create)
+  const updateJob = useMutation(api.jobs.update)
+  const deleteJob = useMutation(api.jobs.remove)
 
   const handleCreateJob = () => {
     setEditingJob(null)
@@ -89,33 +56,101 @@ function RouteComponent() {
   }
 
   const handleEditJob = (id: string) => {
-    const job = mockJobs.find((j) => j.id === id)
+    const job = jobs?.find((j) => j._id === id)
     if (job) {
-      setEditingJob(job)
+      // Transform Convex data to form format
+      setEditingJob({
+        id: job._id,
+        title: job.title,
+        company: job.company,
+        location: job.location || '',
+        type: job.type || '',
+        salary: job.salary || '',
+        description: job.description,
+        requirements: job.requirements.join(', '),
+        benefits: job.benefits || '',
+        isRemote: job.isRemote || false,
+        isActive: job.status === 'open',
+        image: job.image || '',
+      })
       setIsFormOpen(true)
     }
   }
 
-  const handleDeleteJob = (id: string) => {
-    console.log('Delete job:', id)
-    // Will be implemented with backend
+  const handleDeleteJob = async (id: string) => {
+    try {
+      await deleteJob({ id: id as Id<'jobs'> })
+    } catch (error) {
+      console.error('Failed to delete job:', error)
+    }
   }
 
-  const handleFormSubmit = (data: any) => {
-    if (editingJob) {
-      console.log('Updating job:', editingJob.id, data)
-      // Will be implemented with backend - update job
-    } else {
-      console.log('Creating new job:', data)
-      // Will be implemented with backend - create job
+  const handleFormSubmit = async (data: JobFormData) => {
+    // Convert requirements string to array
+    const requirementsArray = data.requirements
+      .split(',')
+      .map((r) => r.trim())
+      .filter((r) => r.length > 0)
+
+    try {
+      if (editingJob) {
+        // Update existing job
+        await updateJob({
+          id: editingJob.id as Id<'jobs'>,
+          title: data.title,
+          company: data.company,
+          location: data.location || undefined,
+          type: data.type || undefined,
+          salary: data.salary || undefined,
+          description: data.description,
+          requirements: requirementsArray,
+          benefits: data.benefits || undefined,
+          image: data.image || undefined,
+          isRemote: data.isRemote,
+          status: data.isActive ? 'open' : 'draft',
+        })
+      } else {
+        // Create new job
+        await createJob({
+          title: data.title,
+          company: data.company,
+          location: data.location || undefined,
+          type: data.type || undefined,
+          salary: data.salary || undefined,
+          description: data.description,
+          requirements: requirementsArray,
+          benefits: data.benefits || undefined,
+          image: data.image || undefined,
+          isRemote: data.isRemote,
+          status: data.isActive ? 'open' : 'draft',
+        })
+      }
+      setIsFormOpen(false)
+      setEditingJob(null)
+    } catch (error) {
+      console.error('Failed to save job:', error)
     }
-    setIsFormOpen(false)
-    setEditingJob(null)
   }
 
   const handleCloseForm = () => {
     setIsFormOpen(false)
     setEditingJob(null)
+  }
+
+  // Loading state
+  if (jobs === undefined) {
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <h1 className="text-3xl font-bold mb-6" style={{ color: '#94618e' }}>
+          JOB LIST
+        </h1>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-pulse text-lg" style={{ color: '#94618e' }}>
+            Loading...
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -139,80 +174,108 @@ function RouteComponent() {
       {/* Job Count */}
       <div className="mb-6">
         <p className="text-base font-medium" style={{ color: '#94618e', opacity: 0.8 }}>
-          Total Jobs: <span className="font-bold">{mockJobs.length}</span>
+          Total Jobs: <span className="font-bold">{jobs.length}</span>
         </p>
       </div>
 
       {/* Jobs Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {mockJobs.map((job) => (
-          <div
-            key={job.id}
-            className="rounded-2xl overflow-hidden border-2 shadow-lg hover:shadow-2xl transition-all duration-300"
-            style={{
-              backgroundColor: '#f8eee7',
-              borderColor: '#94618e',
-            }}
-          >
-            {/* Job Image with Title Overlay */}
-            <div className="relative w-full h-48 overflow-hidden">
-              <img
-                src={job.image}
-                alt={job.title}
-                className="w-full h-full object-cover"
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(90,56,81,0.9) 100%)',
-                }}
-              />
-              {/* Job Title Overlay */}
-              <div className="absolute bottom-6 left-6 right-6">
-                <h3 className="text-2xl font-bold text-white mb-1">
-                  {job.title}
-                </h3>
-              </div>
-            </div>
-
-            {/* Card Content */}
+      {jobs.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {jobs.map((job) => (
             <div
-              className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-              style={{ backgroundColor: '#5a3851' }}
+              key={job._id}
+              className="rounded-2xl overflow-hidden border-2 shadow-lg hover:shadow-2xl transition-all duration-300"
+              style={{
+                backgroundColor: '#f8eee7',
+                borderColor: '#94618e',
+              }}
             >
-              <div>
-                <p className="text-base font-semibold mb-1" style={{ color: '#f8eee7' }}>
-                  {job.company}
-                </p>
-                <p className="text-sm" style={{ color: '#f8eee7', opacity: 0.8 }}>
-                  {job.location} • {job.type} • {job.salary}
-                </p>
+              {/* Job Image with Title Overlay */}
+              <div className="relative w-full h-48 overflow-hidden">
+                {job.image ? (
+                  <img
+                    src={job.image}
+                    alt={job.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ backgroundColor: '#b8a0b3' }}
+                  >
+                    <span className="text-4xl">💼</span>
+                  </div>
+                )}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(90,56,81,0.9) 100%)',
+                  }}
+                />
+                {/* Job Title Overlay */}
+                <div className="absolute bottom-6 left-6 right-6">
+                  <h3 className="text-2xl font-bold text-white mb-1">
+                    {job.title}
+                  </h3>
+                </div>
+                {/* Status Badge */}
+                {job.status !== 'open' && (
+                  <div className="absolute top-4 right-4">
+                    <span
+                      className="px-3 py-1 rounded-full text-xs font-semibold"
+                      style={{
+                        backgroundColor: job.status === 'draft' ? '#fef9c3' : '#fee2e2',
+                        color: job.status === 'draft' ? '#854d0e' : '#991b1b',
+                      }}
+                    >
+                      {job.status === 'draft' ? 'Draft' : 'Closed'}
+                    </span>
+                  </div>
+                )}
               </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleEditJob(job.id)}
-                  className="flex-1 sm:flex-none"
-                >
-                  EDIT
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => handleDeleteJob(job.id)}
-                  className="flex-1 sm:flex-none"
-                >
-                  DELETE
-                </Button>
+
+              {/* Card Content */}
+              <div
+                className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                style={{ backgroundColor: '#5a3851' }}
+              >
+                <div>
+                  <p className="text-base font-semibold mb-1" style={{ color: '#f8eee7' }}>
+                    {job.company}
+                  </p>
+                  <p className="text-sm" style={{ color: '#f8eee7', opacity: 0.8 }}>
+                    {job.location || 'Location not specified'} • {job.type || 'Not specified'} • {job.salary || 'Salary not specified'}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: '#f8eee7', opacity: 0.6 }}>
+                    Posted {formatRelativeTime(job.createdAt)}
+                  </p>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleEditJob(job._id)}
+                    className="flex-1 sm:flex-none"
+                  >
+                    EDIT
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleDeleteJob(job._id)}
+                    className="flex-1 sm:flex-none"
+                  >
+                    DELETE
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Empty State (show when no jobs) */}
-      {mockJobs.length === 0 && (
+      {jobs.length === 0 && (
         <div
           className="rounded-xl p-12 text-center border-2 border-dashed"
           style={{ borderColor: '#94618e', backgroundColor: '#f8eee7' }}

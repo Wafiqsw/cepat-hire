@@ -14,6 +14,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeekerPaymentsRouteImport } from './routes/seeker/payments'
 import { Route as EmployerPaymentsRouteImport } from './routes/employer/payments'
+import { Route as EmployerJoblistRouteImport } from './routes/employer/joblist'
 import { Route as EmployerDashboardRouteImport } from './routes/employer/dashboard'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
@@ -48,6 +49,11 @@ const SeekerPaymentsRoute = SeekerPaymentsRouteImport.update({
 const EmployerPaymentsRoute = EmployerPaymentsRouteImport.update({
   id: '/employer/payments',
   path: '/employer/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerJoblistRoute = EmployerJoblistRouteImport.update({
+  id: '/employer/joblist',
+  path: '/employer/joblist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployerDashboardRoute = EmployerDashboardRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/employer/dashboard': typeof EmployerDashboardRoute
+  '/employer/joblist': typeof EmployerJoblistRoute
   '/employer/payments': typeof EmployerPaymentsRoute
   '/seeker/payments': typeof SeekerPaymentsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/employer/dashboard'
+    | '/employer/joblist'
     | '/employer/payments'
     | '/seeker/payments'
     | '/demo/api/names'
@@ -214,6 +226,7 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   EmployerDashboardRoute: typeof EmployerDashboardRoute
+  EmployerJoblistRoute: typeof EmployerJoblistRoute
   EmployerPaymentsRoute: typeof EmployerPaymentsRoute
   SeekerPaymentsRoute: typeof SeekerPaymentsRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/employer/payments'
       fullPath: '/employer/payments'
       preLoaderRoute: typeof EmployerPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/joblist': {
+      id: '/employer/joblist'
+      path: '/employer/joblist'
+      fullPath: '/employer/joblist'
+      preLoaderRoute: typeof EmployerJoblistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employer/dashboard': {
@@ -342,6 +362,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   EmployerDashboardRoute: EmployerDashboardRoute,
+  EmployerJoblistRoute: EmployerJoblistRoute,
   EmployerPaymentsRoute: EmployerPaymentsRoute,
   SeekerPaymentsRoute: SeekerPaymentsRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
