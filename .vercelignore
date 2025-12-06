@@ -4,9 +4,6 @@ node_modules
 .DS_Store
 *.log
 .vinxi
-dist
-build
 .turbo
 coverage
 .cache
-convex/_generated
