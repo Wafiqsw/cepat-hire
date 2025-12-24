@@ -6,8 +6,6 @@
 
 CEPATHIRE is an **AI-powered** job hiring platform that connects employers with talented job seekers. Leveraging cutting-edge agentic AI technology, CEPATHIRE revolutionizes the hiring process by enabling employers to create job postings through simple prompts and allowing job seekers to auto-apply to relevant positions with AI assistance.
 
-![CEPATHIRE](./src/logo.svg)
-
 CEPATHIRE
 
 ## 🤖 AI-Powered Features
